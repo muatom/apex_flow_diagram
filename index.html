@@ -236,28 +236,6 @@ path.trace.thin{stroke-width:4;}
 .n{cursor:pointer;}
 .n.pin{filter:drop-shadow(0 0 4px rgba(16,26,61,.95)) drop-shadow(0 0 12px rgba(16,26,61,.4));}
 
-/* כפתור השאלה ליד מתג הגרסאות */
-#vq{font-family:inherit;width:24px;height:24px;border-radius:50%;border:1px solid var(--line-2);
-  background:#fff;color:#5c6884;font-size:13px;font-weight:850;cursor:pointer;line-height:1;flex:0 0 auto;}
-#vq:hover{border-color:var(--nv);color:var(--nv);}
-
-/* חלונית הסבר על הגרסאות */
-#vinfo{position:fixed;top:calc(var(--topbar) + 44px);right:26px;width:430px;max-height:70vh;overflow-y:auto;
-  background:#fff;border:1px solid var(--line-2);border-radius:16px;z-index:80;display:none;
-  box-shadow:0 24px 60px -22px rgba(16,26,61,.42);padding:16px 18px 14px;}
-#vinfo .ph{display:flex;align-items:center;justify-content:space-between;font-size:17px;
-  font-weight:850;margin-bottom:12px;}
-#vinfo .vrow{border-top:1px solid var(--line);padding-top:11px;margin-top:11px;}
-#vinfo .vrow:first-of-type{border-top:none;padding-top:0;margin-top:0;}
-#vinfo .vn{font-size:13px;font-weight:850;border-radius:7px;padding:3px 10px;display:inline-block;margin-bottom:6px;}
-#vinfo .nvA{background:var(--cor-s);color:var(--cor-d);}
-#vinfo .nvB{background:var(--grn-s);color:var(--grn-d);}
-#vinfo .nvO{background:var(--pur-s);color:var(--pur-d);}
-#vinfo p{font-size:13.5px;font-weight:300;line-height:1.5;color:var(--ink);text-wrap:pretty;}
-#vinfo p b{font-weight:800;}
-#vinfo .vf{margin-top:13px;background:var(--band);border-radius:10px;padding:10px 12px;
-  font-size:12.5px;font-weight:600;color:#4d5978;line-height:1.45;}
-
 .lbl{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid var(--line-2);
   border-radius:999px;padding:3px 11px;font-size:12.5px;font-weight:800;color:#3f4b71;white-space:nowrap;
   line-height:1.15;box-shadow:0 2px 6px -3px rgba(16,26,61,.2);transition:opacity .25s;}
@@ -267,11 +245,6 @@ path.trace.thin{stroke-width:4;}
 .lbl.c{background:var(--cor-s);border-color:var(--cor-b);color:var(--cor-d);}
 .lbl.as{border-style:dashed;}
 .lbl.sm{font-size:11.5px;padding:2px 9px;}
-
-#vinfo .ph button{font-family:inherit;width:24px;height:24px;border-radius:7px;
-  border:1px solid var(--line-2);background:#fff;color:var(--mut);font-size:15px;font-weight:800;
-  cursor:pointer;line-height:1;flex:0 0 auto;}
-#vinfo .ph button:hover{color:var(--nv);border-color:var(--nv);}
 
 /* ============ מקרא ============ */
 #bot{position:fixed;bottom:0;right:0;left:0;min-height:62px;z-index:60;
@@ -334,7 +307,6 @@ path.trace.thin{stroke-width:4;}
       <button data-v="B">Offline · גרסה B</button>
       <button data-v="O">Online</button>
     </div>
-    <button id="vq" title="מה ההבדל בין הגרסאות">?</button>
     <label class="tg" title="מציג בדהוי את הרכיבים ששייכים לגרסאות האחרות">
       <input type="checkbox" id="ghost"><span class="sw"></span>הבדלים מגרסאות אחרות
     </label>
@@ -368,30 +340,6 @@ path.trace.thin{stroke-width:4;}
 <div id="stage">
   <div id="world"><svg id="edges"></svg><div id="nodes"></div></div>
 </div>
-<div id="vinfo">
-  <div class="ph">שלוש הגרסאות<button id="vinfoX" title="סגור">×</button></div>
-  <div class="vrow">
-    <div class="vn nvA">Offline · גרסה A</div>
-    <p>ההכרעה אם התיק הולך לחיתום נעשית כולה <b>בתוך BPR</b>, מול חיים 2000 וטבלאות DPT.
-    אין ראוטר השלמות. הפרופיל הרפואי נבנה <b>אחרי</b> ההכרעה, בטריגר API מ-BPR.
-    זו הגרסה שכנראה נספיק השנה.</p>
-  </div>
-  <div class="vrow">
-    <div class="vn nvB">Offline · גרסה B</div>
-    <p>במקום חיים 2000 נכנס <b>ראוטר השלמות וניתוב שאנחנו בונים</b>: משווה את ההצהרה לפרופיל,
-    מזהה אנומליות, בודק אילו מסמכים חסרים, ומכריע על הניתוב לפי חוקה שהעסק עורך.
-    החוסרים יוצאים ללקוח במייל, אסינכרוני. נכונה יותר ארכיטקטונית.</p>
-  </div>
-  <div class="vrow">
-    <div class="vn nvO">Online</div>
-    <p>הלקוח מזין ת"ז ובוחר מוצר, והפרופיל <b>מתחיל להיבנות ברקע</b> באותו רגע.
-    אותו ראוטר כמו בגרסה B, אבל החוסרים והתשובה מוצגים ללקוח <b>על המסך בזמן אמת</b>
-    ולא במייל. אין חדר סריקה ואין שירות טופס.</p>
-  </div>
-  <div class="vf">הליבה זהה בשלושתן: פרופיל רפואי, מנוע חיתום, ממשק חתם.
-  משתנים רק ערוץ הכניסה, מי מכריע על הניתוב, ומתי הלקוח מקבל תשובה.</div>
-</div>
-
 <div id="lanetags"></div>
 
 <footer id="bot">
@@ -1187,23 +1135,6 @@ function paint(){
     o.box.classList.toggle("out",out); o.lbl.classList.toggle("out",out); });
 }
 
-/* ---------- חלונית הסבר על הגרסאות ---------- */
-const info=document.getElementById("vinfo");
-function closeInfo(){ info.style.display="none"; }
-document.getElementById("vq").onclick=ev=>{
-  ev.stopPropagation();
-  if(info.style.display==="block"){ closeInfo(); return; }
-  info.style.display="block";
-  const r=ev.currentTarget.getBoundingClientRect();      /* נצמדת לכפתור שפתח אותה */
-  info.style.right=Math.max(12,Math.min(innerWidth-info.offsetWidth-12,innerWidth-r.right-8))+"px";
-  info.style.top=(r.bottom+10)+"px";
-};
-document.getElementById("vinfoX").onclick=closeInfo;
-info.addEventListener("click",ev=>ev.stopPropagation());
-document.addEventListener("click",ev=>{
-  if(!info.contains(ev.target) && ev.target.id!=="vq") closeInfo();
-});
-
 /* ==========================================================================
    5 · בקרות
    ========================================================================== */
@@ -1297,7 +1228,7 @@ window.addEventListener("keydown",ev=>{
   if(ev.key==="0")fit();
   else if(ev.key==="+"||ev.key==="=")zoomAt(vw()/2,vh()/2,k*1.3);
   else if(ev.key==="-")zoomAt(vw()/2,vh()/2,k/1.3);
-  else if(ev.key==="Escape"){clearPin();closeInfo();}
+  else if(ev.key==="Escape"){clearPin();}
   else if(ev.key==="ArrowRight"){panX+=200;apply();}
   else if(ev.key==="ArrowLeft"){panX-=200;apply();}
 });
