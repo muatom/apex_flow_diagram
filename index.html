@@ -400,7 +400,7 @@ const REGIONS = [
 ];
 /* גבולות האזורים לפי עמודות תכן */
 const RGN_OF = c =>
-  c<=0 ?0 : c<=6 ?1 : c<=11 ?2 : c<=20 ?3 : c<=28 ?4 : c<=31 ?5 : 6;
+  c<=0 ?0 : c<=6 ?1 : c<=11 ?2 : c<=20 ?3 : c<=34 ?4 : c<=37 ?5 : 6;
 
 const NODES = [
 /* ---------- פס הליבה ---------- */
@@ -416,10 +416,10 @@ const NODES = [
 {id:"sys_docah", lane:"sys", anchor:"p3",  off:-1.15, kind:"sys", t:"Docah", s:"חילוץ מובנה · הצהרות בריאות", v:["A","B","O"]},
 {id:"sys_llm",   lane:"sys", anchor:"p3",  off:0.9,   kind:"sys", t:"שירות LLM", s:"OCR · חילוץ ישויות · Summary", v:["A","B","O"]},
 {id:"sys_image", lane:"sys", anchor:"p2",  off:-1.1,  kind:"sys", t:"Image / Documentum", s:"ארכיון המסמכים", v:["A","B","O"]},
-{id:"svc_pii",   lane:"sys", anchor:"e_src", off:0,    kind:"sys", t:"ניטרול PII", s:"חובה בכל יציאה החוצה", v:["A","B","O"]},
-{id:"ext_cmc",   lane:"sys", anchor:"e_cmc", off:1.15, kind:"ext", t:"Swiss Re · CMC", s:"מחשבון כמותי · דטרמיניסטי", v:["A","B","O"]},
-{id:"ext_scout", lane:"sys", anchor:"e_scout",off:2.3, kind:"ext", t:"Swiss Re · Scout", s:"GenAI · שתי קריאות", v:["A","B","O"]},
-{id:"svc_trans", lane:"sys", anchor:"e_ingest",off:2.4, kind:"sys", t:"שירות תרגום", s:"אנגלית ↔ עברית", v:["A","B","O"]},
+{id:"svc_pii",   lane:"sys", anchor:"e_pii", off:0,    kind:"sys", t:"ניטרול PII", s:"חובה בכל יציאה החוצה", v:["A","B","O"]},
+{id:"ext_cmc",   lane:"sys", anchor:"e_cmc", off:0,    kind:"ext", t:"Swiss Re · CMC", s:"מחשבון כמותי · דטרמיניסטי", v:["A","B","O"]},
+{id:"ext_scout", lane:"sys", anchor:"e_rating",off:0,  kind:"ext", t:"Swiss Re · Scout", s:"GenAI · שתי קריאות", v:["A","B","O"]},
+{id:"svc_trans", lane:"sys", anchor:"e_ingest",off:0,   kind:"sys", t:"שירות תרגום", s:"אנגלית ↔ עברית", v:["A","B","O"]},
 {id:"sys_citrix",lane:"sys", anchor:"u2", off:1.1, kind:"sys", t:"Citrix · הזדהות", s:"AD/IDM · MFA", v:["A","B","O"]},
 
 /* ---------- אזור 1 · קליטה ---------- */
@@ -475,28 +475,41 @@ const NODES = [
 {id:"d_coverage", lane:"flow", col:22, no:2, kind:"dia", t:"הכיסוי נתמך לחיתום?",
  s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
 {id:"e_internal", lane:"flow", col:23, no:3, t:"חיתום פנימי", s:"אבחנה אחת בכל פנייה · פר קבוצת סיכון", v:["A","B","O"]},
-{id:"d_resolved", lane:"flow", col:24, no:4, kind:"dia", t:"כל האבחנות הוכרעו?", s:"אחרת · יציאה ל-Swiss Re", v:["A","B","O"]},
+{id:"d_resolved", lane:"flow", col:24, no:4, kind:"dia", t:"הוכרע בחוקה הפנימית?", v:["A","B","O"]},
 {id:"e_src",      lane:"flow", col:25, no:5, t:"ניתוב מקור חיצוני", s:"פר אבחנה · אבחנה נתמכת וסוג מוצר", v:["A","B","O"]},
-{id:"e_cmc",      lane:"up",   col:26, no:6, t:"פנייה ל-CMC", s:"נתונים כמותיים · תשובה אחת", v:["A","B","O"]},
-{id:"e_scout",    lane:"flow", col:26, no:6, t:"פנייה ל-Scout", s:"LLM · info ואז rating", v:["A","B","O"]},
-{id:"e_ingest",   lane:"flow", col:27, no:7, t:"קליטה, תרגום ו-Parsing", s:"הסבר מילולי והמלצה מספרית", v:["A","B","O"]},
-{id:"out_diag",   lane:"flow", col:28, no:8, kind:"ok", t:"תוצאה לאבחנה", s:"ואז האבחנה הבאה", v:["A","B","O"]},
+/* הכנה משותפת לשתי הקריאות */
+{id:"e_auth",     lane:"flow", col:26, no:6, t:"הזדהות מול Swiss Re", s:"access_token · תקף 3600 שניות", v:["A","B","O"]},
+{id:"e_pii",      lane:"flow", col:27, no:7, t:"ניטרול PII ותרגום", s:"חובה לפני כל יציאה החוצה", v:["A","B","O"]},
+/* CMC בקריאה אחת, Scout בשתיים עם עיבוד ביניים */
+{id:"e_cmc",      lane:"up",   col:28, no:8, t:"פנייה ל-CMC", s:"קריאה אחת · נתונים כמותיים", v:["A","B","O"]},
+{id:"e_info",     lane:"flow", col:28, no:8, t:"Scout · קריאה 1", s:"info · שם האבחנה בלבד", v:["A","B","O"]},
+{id:"e_summary",  lane:"flow", col:29, no:9, t:"בניית Summary", s:"מהפרופיל, מול LLM · עד 20K טוקנים", v:["A","B","O"]},
+{id:"e_rating",   lane:"flow", col:30, no:10, t:"Scout · קריאה 2", s:"rating · עם ה-Summary", v:["A","B","O"]},
+{id:"d_rating_ok",lane:"flow", col:31, no:11, kind:"dia", t:"התקבל RATING?", v:["A","B","O"]},
+/* Fallback · שתי מחלקות כשל */
+{id:"e_fb_retry", lane:"dn", col:31, kind:"gray", t:"ניסיון חוזר",
+ s:"טוקן מרוענן · ניטרול מחמיר", v:["A","B","O"]},
+{id:"e_fb_manual",lane:"dn", col:32, kind:"warn", t:"כשל סופי",
+ s:"מזהה התהליך עובר לחיתום ידני", v:["A","B","O"]},
+{id:"e_ingest",   lane:"flow", col:32, no:12, t:"קליטה, תרגום ו-Parsing", s:"הסבר מילולי והמלצה מספרית", v:["A","B","O"]},
+{id:"out_diag",   lane:"flow", col:33, no:13, t:"רישום תוצאה לאבחנה", s:"הוכרעה, או סומנה כלא הוכרעה", v:["A","B","O"]},
+{id:"d_all_done", lane:"flow", col:34, no:14, kind:"dia", t:"כל האבחנות הוכרעו?", v:["A","B","O"]},
 
 /* ---------- אזור 6 · החלטה ---------- */
-{id:"e_agg",   lane:"flow", col:29, no:1, t:"חיבור ברמת כיסוי", s:"סכימת התוספות פר קבוצת סיכון", v:["A","B","O"]},
-{id:"d_stp",   lane:"flow", col:30, no:2, kind:"dia", t:"STP או חתם?", s:"לפי מיני-חוקת STP", v:["A","B","O"]},
-{id:"e_write", lane:"flow", col:31, no:3, t:"כתיבה אוטומטית ל-BPR", s:"החלטה פר כיסוי · בלי מגע חתם", v:["A","B","O"]},
+{id:"e_agg",   lane:"flow", col:35, no:1, t:"חיבור ברמת כיסוי", s:"סכימת התוספות פר קבוצת סיכון", v:["A","B","O"]},
+{id:"d_stp",   lane:"flow", col:36, no:2, kind:"dia", t:"STP או חתם?", s:"לפי מיני-חוקת STP", v:["A","B","O"]},
+{id:"e_write", lane:"flow", col:37, no:3, t:"כתיבה אוטומטית ל-BPR", s:"החלטה פר כיסוי · בלי מגע חתם", v:["A","B","O"]},
 
 /* ---------- אזור 7 · חתם והפקה ---------- */
-{id:"u1", lane:"flow", col:32, no:1, t:"Worklist", s:"מקרי הפקה פתוחים", v:["A","B","O"]},
-{id:"u2", lane:"flow", col:33, no:2, t:"כניסה למקרה", s:"פוליסה ומבוטחים", v:["A","B","O"]},
-{id:"u3", lane:"flow", col:34, no:3, t:"צפייה בפרופיל ובהחלטות", s:"אבחנות · אירועים · מדדים", v:["A","B","O"]},
-{id:"u4", lane:"flow", col:35, no:4, t:"עריכת פרופיל", s:"הוספה · שינוי · מחיקה", v:["A","B","O"]},
-{id:"u5", lane:"flow", col:36, no:5, t:"פנייה ל-Swiss", s:"החתם כותב בעברית", v:["A","B","O"]},
-{id:"u6", lane:"flow", col:37, no:6, t:"החלטה חיתומית", s:"תוספת · החרגה · דחייה", v:["A","B","O"]},
-{id:"u7", lane:"flow", col:38, no:7, t:"פעולות ל-BPR", s:"הפקה · חוסרים · מכתבים", v:["A","B","O"]},
-{id:"out_policy", lane:"flow", col:39, kind:"ok", t:"הפקת פוליסה", s:"מבוצעת ב-BPR", v:["A","B","O"]},
-{id:"out_client", lane:"flow", col:40, kind:"ok", t:"פלט ללקוח", s:"מייל ב-Offline · מסך ב-Online", v:["A","B","O"]},
+{id:"u1", lane:"flow", col:38, no:1, t:"Worklist", s:"מקרי הפקה פתוחים", v:["A","B","O"]},
+{id:"u2", lane:"flow", col:39, no:2, t:"כניסה למקרה", s:"פוליסה ומבוטחים", v:["A","B","O"]},
+{id:"u3", lane:"flow", col:40, no:3, t:"צפייה בפרופיל ובהחלטות", s:"אבחנות · אירועים · מדדים", v:["A","B","O"]},
+{id:"u4", lane:"flow", col:41, no:4, t:"עריכת פרופיל", s:"הוספה · שינוי · מחיקה", v:["A","B","O"]},
+{id:"u5", lane:"flow", col:42, no:5, t:"פנייה ל-Swiss", s:"החתם כותב בעברית", v:["A","B","O"]},
+{id:"u6", lane:"flow", col:43, no:6, t:"החלטה חיתומית", s:"תוספת · החרגה · דחייה", v:["A","B","O"]},
+{id:"u7", lane:"flow", col:44, no:7, t:"פעולות ל-BPR", s:"הפקה · חוסרים · מכתבים", v:["A","B","O"]},
+{id:"out_policy", lane:"flow", col:45, kind:"ok", t:"הפקת פוליסה", s:"מבוצעת ב-BPR", v:["A","B","O"]},
+{id:"out_client", lane:"flow", col:46, kind:"ok", t:"פלט ללקוח", s:"מייל ב-Offline · מסך ב-Online", v:["A","B","O"]},
 
 /* ---------- רצועת המאגרים · שורה 0 ---------- */
 {id:"db_profile", lane:"db", row:0, span:["p3","p_header"], kind:"cy", ic:"ic-db",
@@ -542,8 +555,10 @@ const GROUPS = [
    label:"שלושה חילוצים במקביל · כולם מול שירות LLM"},
   {ids:["d_maturity","d_coverage"], cls:"amb", v:["A","B","O"],
    label:"שער כניסה לחיתום · שתי בדיקות, רכיב אחד"},
-  {ids:["e_cmc","e_scout"], cls:"pur", v:["A","B","O"],
-   label:"סביבת Swiss Re · יציאה החוצה ב-API"}
+  {ids:["e_cmc","e_info","e_summary","e_rating"], cls:"pur", v:["A","B","O"],
+   label:"יציאה ל-Swiss Re · CMC בקריאה אחת, Scout בשתיים"},
+  {ids:["e_fb_retry","e_fb_manual"], cls:"a", v:["A","B","O"],
+   label:"Fallback · כשלים טכניים, כל אחד מעביר לחיתום ידני"}
 ];
 
 const EDGES = [
@@ -594,6 +609,8 @@ const EDGES = [
 {f:"f_missing", t:"f_bpr_letter", k:"c", v:["B","O"]},
 {f:"f_bpr_letter", t:"ch_mail", k:"as", l:"החוסרים חוזרים בערוץ ההפצה", v:["B"]},
 {f:"f_bpr_letter", t:"ch_online", k:"as", l:"החוסרים מוצגים ללקוח ב-RT", v:["O"]},
+{f:"rule_docs", t:"f_router_docs", k:"r", v:["B","O"]},
+{f:"rule_route", t:"d_route", k:"r", v:["B","O"]},
 
 /* ===== אזור 4 · פרופיל רפואי ===== */
 {f:"d_make_profile", t:"p1", k:"main", l:"כן · ריסק ומשכנתא ב-MVP", v:["A","B","O"]},
@@ -634,35 +651,57 @@ const EDGES = [
 {f:"d_coverage", t:"u1", k:"c", via:"dn", l:"כיסוי לא נתמך · ישר לחתם", v:["A","B","O"]},
 {f:"e_internal", t:"d_resolved", k:"main", v:["A","B","O"]},
 {f:"d_resolved", t:"out_diag", k:"g", via:"up", l:"הוכרע פנימית · בלי Swiss Re", v:["A","B","O"]},
-{f:"d_resolved", t:"e_src", k:"main", l:"יש הפניה לחתם · לפחות באבחנה אחת", v:["A","B","O"]},
-{f:"e_src", t:"e_cmc",   k:"main", via:"up", l:"ברשימה, ומוצר נתמך", v:["A","B","O"]},
-{f:"e_src", t:"e_scout", k:"main", l:"לא ברשימה, או MedEx ונוער", v:["A","B","O"]},
-{f:"e_cmc",   t:"svc_pii", k:"x", v:["A","B","O"]},
-{f:"e_scout", t:"svc_pii", k:"x", l:"תמיד ביציאה", v:["A","B","O"]},
-{f:"e_scout", t:"sys_llm", k:"x", l:"בניית Summary בין הקריאות", v:["A","B","O"]},
-{f:"svc_pii", t:"ext_cmc", k:"x", v:["A","B","O"]},
-{f:"svc_pii", t:"ext_scout", k:"x", v:["A","B","O"]},
-{f:"ext_cmc",   t:"e_ingest", k:"xa", l:"rating", v:["A","B","O"]},
-{f:"ext_scout", t:"e_ingest", k:"xa", l:"info ואז rating", v:["A","B","O"]},
-{f:"e_cmc",   t:"e_ingest", k:"main", via:"up", v:["A","B","O"]},
-{f:"e_scout", t:"e_ingest", k:"main", v:["A","B","O"]},
+{f:"d_resolved", t:"e_src", k:"main", l:"נדרשת פנייה ל-Swiss Re", v:["A","B","O"]},
+
+/* הכנה משותפת, ואז הפיצול */
+{f:"e_src", t:"e_auth", k:"main", v:["A","B","O"]},
+{f:"e_auth", t:"e_pii", k:"main", v:["A","B","O"]},
+{f:"e_pii", t:"svc_pii", k:"x", v:["A","B","O"]},
+{f:"e_pii", t:"svc_trans", k:"x", l:"עברית ← אנגלית", v:["A","B","O"]},
+{f:"e_pii", t:"e_cmc",  k:"main", via:"up", l:"ברשימה, ומוצר נתמך", v:["A","B","O"]},
+{f:"e_pii", t:"e_info", k:"main", l:"לא ברשימה, או MedEx ונוער", v:["A","B","O"]},
+
+/* CMC */
+{f:"e_cmc", t:"ext_cmc", k:"x", l:"נתונים כמותיים", v:["A","B","O"]},
+{f:"e_cmc", t:"d_rating_ok", k:"main", via:"up", v:["A","B","O"]},
+
+/* Scout · שתי קריאות ועיבוד ביניים */
+{f:"e_info", t:"ext_scout", k:"x", l:"קריאה 1 · info", v:["A","B","O"]},
+{f:"e_info", t:"e_summary", k:"main", l:"מידע על המחלה", v:["A","B","O"]},
+{f:"e_summary", t:"sys_llm", k:"x", l:"בניית ה-Summary", v:["A","B","O"]},
+{f:"e_summary", t:"e_rating", k:"main", v:["A","B","O"]},
+{f:"e_rating", t:"ext_scout", k:"x", l:"קריאה 2 · rating", v:["A","B","O"]},
+{f:"e_rating", t:"d_rating_ok", k:"main", v:["A","B","O"]},
+
+/* Fallback · שתי מחלקות כשל, לפי קוד השגיאה מ-Swiss Re */
+{f:"d_rating_ok", t:"e_ingest", k:"main", l:"התקבל", v:["A","B","O"]},
+{f:"d_rating_ok", t:"e_fb_retry", k:"c", l:"טוקן פג, או PII שהחמיץ", v:["A","B","O"]},
+{f:"d_rating_ok", t:"e_fb_manual", k:"c", l:"מעל 20K טוקנים, או אין RATING בסקופ", v:["A","B","O"]},
+{f:"e_fb_retry", t:"e_auth", k:"as", via:"dn", l:"ניסיון חוזר", v:["A","B","O"]},
+{f:"e_fb_retry", t:"e_fb_manual", k:"c", l:"אחרי מספר ניסיונות", v:["A","B","O"]},
+{f:"e_fb_manual", t:"out_diag", k:"c", l:"האבחנה מסומנת כלא הוכרעה", v:["A","B","O"]},
+
+/* קליטה, לולאה, וסגירת האזור */
 {f:"e_ingest", t:"svc_trans", k:"x", l:"אנגלית ← עברית", v:["A","B","O"]},
-{f:"e_ingest", t:"out_diag", k:"main", v:["A","B","O"]},
 {f:"e_ingest", t:"db_uwres", k:"w", l:"המלצה והסבר", v:["A","B","O"]},
+{f:"e_ingest", t:"out_diag", k:"main", v:["A","B","O"]},
 {f:"e_internal", t:"db_uwres", k:"w", l:"הכרעה פנימית", v:["A","B","O"]},
 {f:"out_diag", t:"e_internal", k:"as", via:"up", l:"האבחנה הבאה", v:["A","B","O"]},
+{f:"out_diag", t:"d_all_done", k:"main", l:"סיימנו את כל האבחנות", v:["A","B","O"]},
+{f:"d_all_done", t:"u1", k:"c", via:"dn", l:"אבחנה לא הוכרעה · לחיתום ידני", v:["A","B","O"]},
+
+/* קריאות ממאגרים */
 {f:"db_profile", t:"e_internal", k:"r", l:"אבחנות ומדדים", v:["A","B","O"]},
-{f:"db_profile", t:"e_src", k:"r", l:"מדדים ל-CMC", v:["A","B","O"]},
+{f:"db_profile", t:"e_cmc", k:"r", l:"מדדים ל-CMC", v:["A","B","O"]},
+{f:"db_profile", t:"e_summary", k:"r", l:"נתונים ל-Summary", v:["A","B","O"]},
 {f:"rule_cov", t:"d_make_profile", k:"r", l:"סוגי כיסוי נתמכים", v:["A","B","O"]},
 {f:"rule_cov", t:"d_coverage", k:"r", l:"אותה חוקה · צרכן שני", v:["A","B","O"]},
 {f:"rule_thresh", t:"d_maturity", k:"r", l:"הסף שהעסק הגדיר", v:["A","B","O"]},
 {f:"rule_uw", t:"e_internal", k:"r", l:"שתי טבלאות ההחלטות", v:["A","B","O"]},
 {f:"rule_src", t:"e_src", k:"r", l:"אבחנה נתמכת, ואז סוג המוצר", v:["A","B","O"]},
-{f:"rule_docs", t:"f_router_docs", k:"r", v:["B","O"]},
-{f:"rule_route", t:"d_route", k:"r", v:["B","O"]},
 
 /* ===== אזור 6 · החלטה ===== */
-{f:"out_diag", t:"e_agg", k:"main", l:"כל האבחנות הוכרעו", v:["A","B","O"]},
+{f:"d_all_done", t:"e_agg", k:"g", l:"כל האבחנות הוכרעו", v:["A","B","O"]},
 {f:"e_agg", t:"d_stp", k:"main", v:["A","B","O"]},
 {f:"db_uwres", t:"e_agg", k:"r", l:"תוצאות לאגרגציה", v:["A","B","O"]},
 {f:"rule_stp", t:"d_stp", k:"r", v:["A","B","O"]},
