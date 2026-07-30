@@ -152,6 +152,8 @@ body{font-family:var(--font);color:var(--nv);background:#f2f5fa;-webkit-font-smo
 .n.warn>.t{color:var(--cor-d);} .n.warn>.s{color:#9d5544;}
 .n.dash{background:#fdf6f4;border:1.5px dashed var(--cor-b);box-shadow:none;}
 .n.dash>.t{color:var(--cor-d);} .n.dash>.s{color:#9d5544;}
+.n.persona{background:#fff;border:1.5px solid var(--pur-b);border-radius:999px;box-shadow:var(--sh);}
+.n.persona>.t{color:var(--nv);} .n.persona>.s{color:var(--pur-d);}
 .n.gray{background:#f7f9fc;border:1.5px dashed var(--line-2);box-shadow:none;}
 .n.gray>.t{color:#4d5978;} .n.gray>.s{color:var(--mut-2);}
 
@@ -236,6 +238,21 @@ path.trace.thin{stroke-width:4;}
 .n{cursor:pointer;}
 .n.pin{filter:drop-shadow(0 0 4px rgba(16,26,61,.95)) drop-shadow(0 0 12px rgba(16,26,61,.4));}
 
+/* מספור קווי הזרימה · לפי סדר התהליך */
+.enum{position:absolute;transform:translate(-50%,-50%);width:23px;height:23px;border-radius:50%;
+  background:#fff;border:2px solid var(--nv);color:var(--nv);font-size:12px;font-weight:850;
+  display:flex;align-items:center;justify-content:center;font-variant-numeric:tabular-nums;
+  box-shadow:0 2px 6px -2px rgba(16,26,61,.4);z-index:7;transition:opacity .25s;}
+.enum.out{opacity:.08;} .enum.ghost{opacity:.2;}
+.enum.trace{background:var(--nv);color:#fff;box-shadow:0 0 0 3px rgba(45,143,95,.55);}
+/* חיווי מיקוד פעיל */
+#pinbar{position:fixed;bottom:calc(var(--botbar) + 16px);left:50%;transform:translateX(-50%);
+  z-index:70;background:var(--nv);color:#fff;border-radius:999px;padding:9px 18px;font-size:13px;
+  font-weight:800;display:none;align-items:center;gap:10px;white-space:nowrap;
+  box-shadow:0 12px 30px -10px rgba(16,26,61,.5);}
+#pinbar.on{display:flex;}
+#pinbar kbd{background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.3);border-radius:6px;
+  padding:2px 8px;font-family:inherit;font-size:12px;font-weight:850;}
 .lbl{position:absolute;transform:translate(-50%,-50%);background:#fff;border:1px solid var(--line-2);
   border-radius:999px;padding:3px 11px;font-size:12.5px;font-weight:800;color:#3f4b71;white-space:nowrap;
   line-height:1.15;box-shadow:0 2px 6px -3px rgba(16,26,61,.2);transition:opacity .25s;}
@@ -257,6 +274,9 @@ path.trace.thin{stroke-width:4;}
 .s-nv{width:22px;height:13px;border-radius:4px;background:var(--nv);flex:0 0 auto;}
 .s-w{width:22px;height:13px;border-radius:4px;background:#fff;border:1px solid #d8e0ee;flex:0 0 auto;}
 .s-x{width:22px;height:13px;border-radius:4px;background:#fff;border:1px solid var(--xp);flex:0 0 auto;}
+.s-pe{width:22px;height:13px;border-radius:999px;background:#fff;border:1.5px solid var(--pur-b);flex:0 0 auto;}
+.s-en{width:17px;height:17px;border-radius:50%;background:#fff;border:1.5px solid var(--nv);color:var(--nv);
+  font-size:9.5px;font-weight:850;display:flex;align-items:center;justify-content:center;flex:0 0 auto;}
 .s-cy{width:22px;height:13px;border-radius:22px/6px;background:#fff;border:1.5px solid var(--tl-b);flex:0 0 auto;}
 .s-ru{width:22px;height:13px;border-radius:22px/6px;background:var(--amb-s);border:1.5px solid var(--amb-b);flex:0 0 auto;}
 .s-d{width:12px;height:12px;background:var(--nv);transform:rotate(45deg);border-radius:2px;flex:0 0 auto;}
@@ -340,6 +360,7 @@ path.trace.thin{stroke-width:4;}
 <div id="stage">
   <div id="world"><svg id="edges"></svg><div id="nodes"></div></div>
 </div>
+<div id="pinbar"><span id="pintxt"></span><kbd>Esc</kbd><span>ליציאה מהמיקוד</span></div>
 <div id="lanetags"></div>
 
 <footer id="bot">
@@ -349,6 +370,8 @@ path.trace.thin{stroke-width:4;}
     <span class="li"><span class="s-d"></span>החלטה ב-APEX</span>
     <span class="li"><span class="s-ds"></span>החלטה במערכת קיימת</span>
     <span class="li"><span class="s-w"></span>מערכת קיימת</span>
+    <span class="li"><span class="s-pe"></span>פרסונה</span>
+    <span class="li"><span class="s-en">3</span>סדר הזרימה</span>
     <span class="li"><span class="s-x"></span>ספק חיצוני</span>
     <span class="li"><span class="s-cy"></span>מאגר נתונים</span>
     <span class="li"><span class="s-ru"></span>חוקה עסקית</span>
@@ -390,17 +413,18 @@ path.trace.thin{stroke-width:4;}
    ========================================================================== */
 
 const REGIONS = [
-  {n:1, name:"קליטה",        en:"INTAKE",                        hue:"#5b6b8c"},
-  {n:2, name:"פתיחת מקרה",   en:"SCAN ROOM · CASE CREATION",     hue:"#3b6ea8"},
-  {n:3, name:"ניתוב",        en:"ROUTING",                       hue:"#2f7f8c"},
-  {n:4, name:"פרופיל רפואי", en:"MEDICAL PROFILE",               hue:"#2d8f5f"},
-  {n:5, name:"מנוע החיתום",  en:"UNDERWRITING ENGINE",           hue:"#7a5bbf"},
-  {n:6, name:"החלטה",        en:"AGGREGATION & STP DECISION",    hue:"#a8642f"},
-  {n:7, name:"חתם והפקה",    en:"UNDERWRITER WORKBENCH · ISSUE", hue:"#b8422c"}
+  {n:1, name:"קליטה",           en:"INTAKE · DISTRIBUTION",          hue:"#5b6b8c"},
+  {n:2, name:"פתיחת מקרה",      en:"SCAN ROOM & CASE CREATION",      hue:"#3b6ea8"},
+  {n:3, name:"הכרעה ב-BPR",     en:"UNDERWRITING TRIGGER",           hue:"#2f7f8c"},
+  {n:4, name:"פרופיל רפואי",    en:"MEDICAL PROFILE",                hue:"#2d8f5f"},
+  {n:5, name:"ראוטר ההשלמות",   en:"MISSING & COMPLETENESS ROUTER",  hue:"#7a8f2d"},
+  {n:6, name:"מנוע החיתום",     en:"UNDERWRITING ENGINE",            hue:"#7a5bbf"},
+  {n:7, name:"החלטה",           en:"AGGREGATION & STP DECISION",     hue:"#a8642f"},
+  {n:8, name:"חתם והפקה",       en:"UNDERWRITER WORKBENCH · ISSUE",  hue:"#b8422c"}
 ];
 /* גבולות האזורים לפי עמודות תכן */
 const RGN_OF = c =>
-  c<=0 ?0 : c<=6 ?1 : c<=11 ?2 : c<=20 ?3 : c<=34 ?4 : c<=37 ?5 : 6;
+  c<=0 ?0 : c<=6 ?1 : c<=8 ?2 : c<=17 ?3 : c<=22 ?4 : c<=36 ?5 : c<=39 ?6 : 7;
 
 const NODES = [
 /* ---------- פס הליבה ---------- */
@@ -408,10 +432,17 @@ const NODES = [
  t:"BPR · הליבה", s:"Source of Truth · מקרה הפקה, תורי עבודה, מכתבים, הפקה", v:["A","B","O"]},
 
 /* ---------- מערכות, ערוצים ושירותים ---------- */
-{id:"ch_mail",   lane:"sys", anchor:"f_intake", off:-0.15, kind:"sys", t:"תיבת מייל ארגונית", s:"ערוץ Offline · רוב הנפח", v:["A","B"]},
+/* פרסונות · מי מגיש את הבקשה */
+{id:"p_agent",  lane:"sys", anchor:"f_intake", off:-4.6, kind:"persona", t:"סוכן", s:"מגיש את הבקשה", v:["A","B"]},
+{id:"p_client", lane:"sys", anchor:"f_case",   off:-3.6, kind:"persona", t:"לקוח", s:"מזין ת\"ז ובוחר מוצר", v:["O"]},
+/* מערכות הפצה · לא אינטראקטיביות, ולכן Offline */
+{id:"ch_sms",   lane:"sys", anchor:"f_intake", off:-3.4, kind:"sys", t:"SMS 2000", s:"מערכת הפצה", v:["A","B"]},
+{id:"ch_formali",lane:"sys",anchor:"f_intake", off:-2.3, kind:"sys", t:"מערכת פורמלי", s:"מערכת הפצה", v:["A","B"]},
+{id:"ch_direct",lane:"sys", anchor:"f_intake", off:-1.2, kind:"sys", t:"מייל ישיר", s:"הסוכן שולח בעצמו", v:["A","B"]},
+{id:"ch_mail",  lane:"sys", anchor:"f_intake", off:-0.1, kind:"sys", t:"תיבת מייל ארגונית", s:"מייל עם מסמכים · רוב הנפח", v:["A","B"]},
 {id:"sys_glaxon", lane:"sys", anchor:"f_case", off:-0.05, kind:"sys", t:"שידור · Glaxon",
  s:"XML אחיד · פותח תיק מלא ב-BPR", v:["A","B","O"]},
-{id:"ch_online", lane:"sys", anchor:"f_case",   off:-1.35, kind:"sys", t:"מכירות אונליין", s:"אינטראקטיבי · RT", v:["O"]},
+{id:"ch_online", lane:"sys", anchor:"f_case",   off:-2.4,  kind:"sys", t:"מכירות אונליין", s:"אינטראקטיבי · RT", v:["O"]},
 {id:"sys_haim",  lane:"sys", anchor:"d_uw_bpr", off:0,     kind:"sys", t:"חיים 2000 וטבלאות DPT", s:"לוגיקת הניתוב הקיימת ב-BPR", v:["A"]},
 {id:"sys_docah", lane:"sys", anchor:"p3",  off:-1.15, kind:"sys", t:"Docah", s:"חילוץ מובנה · הצהרות בריאות", v:["A","B","O"]},
 {id:"sys_llm",   lane:"sys", anchor:"p3",  off:0.9,   kind:"sys", t:"שירות LLM", s:"OCR · חילוץ ישויות · Summary", v:["A","B","O"]},
@@ -431,9 +462,10 @@ const NODES = [
 /* המסלול הנתמך · אוטומטי */
 {id:"f_docah_class", lane:"flow", col:2, no:2, t:"Docah · סיווג וחילוץ", s:"סיווג מסמכים וחילוץ נתונים", v:["A","B"]},
 {id:"f_autofile",    lane:"flow", col:3, no:3, t:"תיוק אוטומטי", s:"בעמדת מפתוח · בלי ממפתח", v:["A","B"]},
-{id:"d_tofes",       lane:"flow", col:4, no:4, kind:"dia", t:"שימוש בשירות טופס?", v:["A","B"]},
-{id:"f_tofes",       lane:"flow", col:5, no:5, t:"שירות טופס", s:"מיפוי שדות ל-XML של השידור",
- nw:"רכיב חדש · חא\"ת", v:["A","B"]},
+{id:"d_extract",     lane:"flow", col:4, no:4, kind:"dia", t:"חילוץ מלא או חלקי?",
+ s:"קובע אם נדרש רפרנט", v:["A","B"]},
+{id:"f_tofes",       lane:"flow", col:5, no:5, t:"שירות טופס · MFG", s:"מיפוי שדות ל-XML של השידור",
+ nw:"רכיב חדש · חא\"ת", v:["A","B","O"]},
 /* המסלול הידני · שני הענפים שהיעד לבטל */
 {id:"f_keyer",    lane:"dn", col:2, kind:"dash", t:"ממפתח · תיוק ידני", s:"עמדת מפתוח · חדר הסריקה", v:["A","B"]},
 {id:"f_referent", lane:"dn", col:4, kind:"dash", t:"רפרנט · הזנה ידנית", s:"מזין את הנתונים מהמסמכים", v:["A","B"]},
@@ -445,71 +477,72 @@ const NODES = [
 {id:"d_uw_bpr", lane:"up", col:7, kind:"dia diasys", t:"נדרש חיתום?",
  s:"ה-BPR מכריע מול חיים 2000", v:["A"]},
 /* גרסאות B ו-Online · ראוטר ההשלמות */
-{id:"f_router_anomaly", lane:"flow", col:7, no:1, t:"השוואת הצהרה לפרופיל", s:"זיהוי אנומליות",
+{id:"f_router_anomaly", lane:"flow", col:18, no:1, t:"השוואת הצהרה לפרופיל", s:"זיהוי אנומליות",
  q:"שאלה פתוחה · סנכרון ב-Online. ברירת מחדל: המתנה עם Timeout", v:["B","O"]},
-{id:"f_router_docs",    lane:"flow", col:8, no:2, t:"אילו מסמכים נדרשים", s:"לולאה על כל אבחנה", v:["B","O"]},
-{id:"d_docs_ok",        lane:"flow", col:9, no:3, kind:"dia", t:"כל המסמכים קיימים?", v:["B","O"]},
-{id:"d_route",          lane:"flow", col:10, no:4, kind:"dia", t:"חיתום או הפקה ירוקה?", v:["B","O"]},
-{id:"f_missing",    lane:"dn", col:10, kind:"warn", t:"חיווי חוסרים", s:"רשימה לכל אבחנה", v:["B","O"]},
-{id:"f_bpr_letter", lane:"dn", col:11, kind:"sys",  t:"BPR שולח דרישת השלמה", s:"מייל ב-Offline · מסך ב-Online", v:["B","O"]},
-{id:"out_green", lane:"up", col:11, kind:"ok", t:"הפקה ללא חיתום", s:"מבוצעת ב-BPR · מיידית", v:["A","B","O"]},
+{id:"f_router_docs",    lane:"flow", col:19, no:2, t:"אילו מסמכים נדרשים", s:"לולאה על כל אבחנה", v:["B","O"]},
+{id:"d_docs_ok",        lane:"flow", col:20, no:3, kind:"dia", t:"כל המסמכים קיימים?", v:["B","O"]},
+{id:"d_route",          lane:"flow", col:21, no:4, kind:"dia", t:"חיתום או הפקה ירוקה?", v:["B","O"]},
+{id:"f_missing",    lane:"dn", col:20, kind:"warn", t:"חיווי חוסרים", s:"רשימה לכל אבחנה", v:["B","O"]},
+{id:"f_bpr_letter", lane:"dn", col:21, kind:"sys",  t:"BPR שולח דרישת השלמה", s:"מייל ב-Offline · מסך ב-Online", v:["B","O"]},
+{id:"out_green_a", lane:"up", col:8, kind:"ok", t:"הפקה ללא חיתום", s:"מבוצעת ב-BPR · מיידית", v:["A"]},
+{id:"out_green_b", lane:"up", col:22, kind:"ok", t:"הפקה ללא חיתום", s:"מבוצעת ב-BPR · מיידית", v:["B","O"]},
 
 /* ---------- אזור 4 · פרופיל רפואי ---------- */
-{id:"d_make_profile", lane:"flow", col:12, no:1, kind:"dia", t:"לייצר פרופיל?", s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
-{id:"p1",       lane:"flow", col:13, no:2, t:"בדיקת פרופיל קיים", s:"מתי עודכן לאחרונה", v:["A","B","O"]},
-{id:"d_exists", lane:"flow", col:14, no:3, kind:"dia", t:"קיים פרופיל?", v:["A","B","O"]},
-{id:"p2",       lane:"flow", col:15, no:4, t:"משיכת מסמכים", s:"רפואיים · תביעות · השלמות", v:["A","B","O"]},
-{id:"p3",       lane:"flow", col:16, no:5, t:"חילוץ תוכן", s:"ניתוב המסמך לפי סוגו", v:["A","B","O"]},
-{id:"p4",       lane:"flow", col:17, no:6, t:"ניקוי וסינון", s:"כפילויות · שייכות ללקוח", v:["A","B","O"]},
+{id:"d_make_profile", lane:"flow", col:9, no:1, kind:"dia", t:"לייצר פרופיל?", s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
+{id:"p1",       lane:"flow", col:10, no:2, t:"בדיקת פרופיל קיים", s:"מתי עודכן לאחרונה", v:["A","B","O"]},
+{id:"d_exists", lane:"flow", col:11, no:3, kind:"dia", t:"קיים פרופיל?", v:["A","B","O"]},
+{id:"p2",       lane:"flow", col:12, no:4, t:"משיכת מסמכים", s:"רפואיים · תביעות · השלמות", v:["A","B","O"]},
+{id:"p3",       lane:"flow", col:13, no:5, t:"חילוץ תוכן", s:"ניתוב המסמך לפי סוגו", v:["A","B","O"]},
+{id:"p4",       lane:"flow", col:14, no:6, t:"ניקוי וסינון", s:"כפילויות · שייכות ללקוח", v:["A","B","O"]},
 /* שלושה חילוצים במקביל, כולם מול LLM */
-{id:"p_events",  lane:"up",   col:18, no:7, t:"חילוץ אירועים", s:"אשפוז · בדיקה · ניתוח · מרשם", v:["A","B","O"]},
-{id:"p_diag",    lane:"flow", col:18, no:7, t:"חילוץ אבחנות", s:"כולל פענוח ראשי תיבות", v:["A","B","O"]},
-{id:"p_metrics", lane:"dn",   col:18, no:7, t:"חילוץ מדדים", s:"BMI · לחץ דם · HbA1c", v:["A","B","O"]},
-{id:"p_link",   lane:"flow", col:19, no:8, t:"שיוך אירועים לאבחנות", s:"סיפור רפואי לכל אבחנה", v:["A","B","O"]},
-{id:"p_header", lane:"flow", col:20, no:9, t:"עדכון Header", s:"אמינות · אחוז מסמכים שנקראו", v:["A","B","O"]},
+{id:"p_events",  lane:"up",   col:15, no:7, t:"חילוץ אירועים", s:"אשפוז · בדיקה · ניתוח · מרשם", v:["A","B","O"]},
+{id:"p_diag",    lane:"flow", col:15, no:7, t:"חילוץ אבחנות", s:"כולל פענוח ראשי תיבות", v:["A","B","O"]},
+{id:"p_metrics", lane:"dn",   col:15, no:7, t:"חילוץ מדדים", s:"BMI · לחץ דם · HbA1c", v:["A","B","O"]},
+{id:"p_link",   lane:"flow", col:16, no:8, t:"שיוך אירועים לאבחנות", s:"סיפור רפואי לכל אבחנה", v:["A","B","O"]},
+{id:"p_header", lane:"flow", col:17, no:9, t:"עדכון Header", s:"אמינות · אחוז מסמכים שנקראו", v:["A","B","O"]},
 
 /* ---------- אזור 5 · מנוע החיתום ---------- */
 /* שער כניסה · שתי בדיקות, רכיב אחד */
-{id:"d_maturity", lane:"flow", col:21, no:1, kind:"dia", t:"בשלות הפרופיל?",
+{id:"d_maturity", lane:"flow", col:23, no:1, kind:"dia", t:"בשלות הפרופיל?",
  s:"אחוז מסמכים שנקראו מעל הסף", v:["A","B","O"]},
-{id:"d_coverage", lane:"flow", col:22, no:2, kind:"dia", t:"הכיסוי נתמך לחיתום?",
+{id:"d_coverage", lane:"flow", col:24, no:2, kind:"dia", t:"הכיסוי נתמך לחיתום?",
  s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
-{id:"e_internal", lane:"flow", col:23, no:3, t:"חיתום פנימי", s:"אבחנה אחת בכל פנייה · פר קבוצת סיכון", v:["A","B","O"]},
-{id:"d_resolved", lane:"flow", col:24, no:4, kind:"dia", t:"הוכרע בחוקה הפנימית?", v:["A","B","O"]},
-{id:"e_src",      lane:"flow", col:25, no:5, t:"ניתוב מקור חיצוני", s:"פר אבחנה · אבחנה נתמכת וסוג מוצר", v:["A","B","O"]},
+{id:"e_internal", lane:"flow", col:25, no:3, t:"חיתום פנימי", s:"אבחנה אחת בכל פנייה · פר קבוצת סיכון", v:["A","B","O"]},
+{id:"d_resolved", lane:"flow", col:26, no:4, kind:"dia", t:"הוכרע בחוקה הפנימית?", v:["A","B","O"]},
+{id:"e_src",      lane:"flow", col:27, no:5, t:"ניתוב מקור חיצוני", s:"פר אבחנה · אבחנה נתמכת וסוג מוצר", v:["A","B","O"]},
 /* הכנה משותפת לשתי הקריאות */
-{id:"e_auth",     lane:"flow", col:26, no:6, t:"הזדהות מול Swiss Re", s:"access_token · תקף 3600 שניות", v:["A","B","O"]},
-{id:"e_pii",      lane:"flow", col:27, no:7, t:"ניטרול PII ותרגום", s:"חובה לפני כל יציאה החוצה", v:["A","B","O"]},
+{id:"e_auth",     lane:"flow", col:28, no:6, t:"הזדהות מול Swiss Re", s:"access_token · תקף 3600 שניות", v:["A","B","O"]},
+{id:"e_pii",      lane:"flow", col:29, no:7, t:"ניטרול PII ותרגום", s:"חובה לפני כל יציאה החוצה", v:["A","B","O"]},
 /* CMC בקריאה אחת, Scout בשתיים עם עיבוד ביניים */
-{id:"e_cmc",      lane:"up",   col:28, no:8, t:"פנייה ל-CMC", s:"קריאה אחת · נתונים כמותיים", v:["A","B","O"]},
-{id:"e_info",     lane:"flow", col:28, no:8, t:"Scout · קריאה 1", s:"info · שם האבחנה בלבד", v:["A","B","O"]},
-{id:"e_summary",  lane:"flow", col:29, no:9, t:"בניית Summary", s:"מהפרופיל, מול LLM · עד 20K טוקנים", v:["A","B","O"]},
-{id:"e_rating",   lane:"flow", col:30, no:10, t:"Scout · קריאה 2", s:"rating · עם ה-Summary", v:["A","B","O"]},
-{id:"d_rating_ok",lane:"flow", col:31, no:11, kind:"dia", t:"התקבל RATING?", v:["A","B","O"]},
+{id:"e_cmc",      lane:"up",   col:30, no:8, t:"פנייה ל-CMC", s:"קריאה אחת · נתונים כמותיים", v:["A","B","O"]},
+{id:"e_info",     lane:"flow", col:30, no:8, t:"Scout · קריאה 1", s:"info · שם האבחנה בלבד", v:["A","B","O"]},
+{id:"e_summary",  lane:"flow", col:31, no:9, t:"בניית Summary", s:"מהפרופיל, מול LLM · עד 20K טוקנים", v:["A","B","O"]},
+{id:"e_rating",   lane:"flow", col:32, no:10, t:"Scout · קריאה 2", s:"rating · עם ה-Summary", v:["A","B","O"]},
+{id:"d_rating_ok",lane:"flow", col:33, no:11, kind:"dia", t:"התקבל RATING?", v:["A","B","O"]},
 /* Fallback · שתי מחלקות כשל */
-{id:"e_fb_retry", lane:"dn", col:31, kind:"gray", t:"ניסיון חוזר",
+{id:"e_fb_retry", lane:"dn", col:33, kind:"gray", t:"ניסיון חוזר",
  s:"טוקן מרוענן · ניטרול מחמיר", v:["A","B","O"]},
-{id:"e_fb_manual",lane:"dn", col:32, kind:"warn", t:"כשל סופי",
+{id:"e_fb_manual",lane:"dn", col:34, kind:"warn", t:"כשל סופי",
  s:"מזהה התהליך עובר לחיתום ידני", v:["A","B","O"]},
-{id:"e_ingest",   lane:"flow", col:32, no:12, t:"קליטה, תרגום ו-Parsing", s:"הסבר מילולי והמלצה מספרית", v:["A","B","O"]},
-{id:"out_diag",   lane:"flow", col:33, no:13, t:"רישום תוצאה לאבחנה", s:"הוכרעה, או סומנה כלא הוכרעה", v:["A","B","O"]},
-{id:"d_all_done", lane:"flow", col:34, no:14, kind:"dia", t:"כל האבחנות הוכרעו?", v:["A","B","O"]},
+{id:"e_ingest",   lane:"flow", col:34, no:12, t:"קליטה, תרגום ו-Parsing", s:"הסבר מילולי והמלצה מספרית", v:["A","B","O"]},
+{id:"out_diag",   lane:"flow", col:35, no:13, t:"רישום תוצאה לאבחנה", s:"הוכרעה, או סומנה כלא הוכרעה", v:["A","B","O"]},
+{id:"d_all_done", lane:"flow", col:36, no:14, kind:"dia", t:"כל האבחנות הוכרעו?", v:["A","B","O"]},
 
 /* ---------- אזור 6 · החלטה ---------- */
-{id:"e_agg",   lane:"flow", col:35, no:1, t:"חיבור ברמת כיסוי", s:"סכימת התוספות פר קבוצת סיכון", v:["A","B","O"]},
-{id:"d_stp",   lane:"flow", col:36, no:2, kind:"dia", t:"STP או חתם?", s:"לפי מיני-חוקת STP", v:["A","B","O"]},
-{id:"e_write", lane:"flow", col:37, no:3, t:"כתיבה אוטומטית ל-BPR", s:"החלטה פר כיסוי · בלי מגע חתם", v:["A","B","O"]},
+{id:"e_agg",   lane:"flow", col:37, no:1, t:"חיבור ברמת כיסוי", s:"סכימת התוספות פר קבוצת סיכון", v:["A","B","O"]},
+{id:"d_stp",   lane:"flow", col:38, no:2, kind:"dia", t:"STP או חתם?", s:"לפי מיני-חוקת STP", v:["A","B","O"]},
+{id:"e_write", lane:"flow", col:39, no:3, t:"כתיבה אוטומטית ל-BPR", s:"החלטה פר כיסוי · בלי מגע חתם", v:["A","B","O"]},
 
 /* ---------- אזור 7 · חתם והפקה ---------- */
-{id:"u1", lane:"flow", col:38, no:1, t:"Worklist", s:"מקרי הפקה פתוחים", v:["A","B","O"]},
-{id:"u2", lane:"flow", col:39, no:2, t:"כניסה למקרה", s:"פוליסה ומבוטחים", v:["A","B","O"]},
-{id:"u3", lane:"flow", col:40, no:3, t:"צפייה בפרופיל ובהחלטות", s:"אבחנות · אירועים · מדדים", v:["A","B","O"]},
-{id:"u4", lane:"flow", col:41, no:4, t:"עריכת פרופיל", s:"הוספה · שינוי · מחיקה", v:["A","B","O"]},
-{id:"u5", lane:"flow", col:42, no:5, t:"פנייה ל-Swiss", s:"החתם כותב בעברית", v:["A","B","O"]},
-{id:"u6", lane:"flow", col:43, no:6, t:"החלטה חיתומית", s:"תוספת · החרגה · דחייה", v:["A","B","O"]},
-{id:"u7", lane:"flow", col:44, no:7, t:"פעולות ל-BPR", s:"הפקה · חוסרים · מכתבים", v:["A","B","O"]},
-{id:"out_policy", lane:"flow", col:45, kind:"ok", t:"הפקת פוליסה", s:"מבוצעת ב-BPR", v:["A","B","O"]},
-{id:"out_client", lane:"flow", col:46, kind:"ok", t:"פלט ללקוח", s:"מייל ב-Offline · מסך ב-Online", v:["A","B","O"]},
+{id:"u1", lane:"flow", col:40, no:1, t:"Worklist", s:"מקרי הפקה פתוחים", v:["A","B","O"]},
+{id:"u2", lane:"flow", col:41, no:2, t:"כניסה למקרה", s:"פוליסה ומבוטחים", v:["A","B","O"]},
+{id:"u3", lane:"flow", col:42, no:3, t:"צפייה בפרופיל ובהחלטות", s:"אבחנות · אירועים · מדדים", v:["A","B","O"]},
+{id:"u4", lane:"flow", col:43, no:4, t:"עריכת פרופיל", s:"הוספה · שינוי · מחיקה", v:["A","B","O"]},
+{id:"u5", lane:"flow", col:44, no:5, t:"פנייה ל-Swiss", s:"החתם כותב בעברית", v:["A","B","O"]},
+{id:"u6", lane:"flow", col:45, no:6, t:"החלטה חיתומית", s:"תוספת · החרגה · דחייה", v:["A","B","O"]},
+{id:"u7", lane:"flow", col:46, no:7, t:"פעולות ל-BPR", s:"הפקה · חוסרים · מכתבים", v:["A","B","O"]},
+{id:"out_policy", lane:"flow", col:47, kind:"ok", t:"הפקת פוליסה", s:"מבוצעת ב-BPR", v:["A","B","O"]},
+{id:"out_client", lane:"flow", col:48, kind:"ok", t:"פלט ללקוח", s:"מייל ב-Offline · מסך ב-Online", v:["A","B","O"]},
 
 /* ---------- רצועת המאגרים · שורה 0 ---------- */
 {id:"db_profile", lane:"db", row:0, span:["p3","p_header"], kind:"cy", ic:"ic-db",
@@ -540,6 +573,8 @@ const NODES = [
 {id:"rule_src",    lane:"db", row:1, span:["e_src","e_src"], kind:"cy rule", ic:"ic-rules",
  t:"חוקת ניתוב CMC מול Scout", s:"שתי בדיקות, בסדר הזה",
  tags:["אבחנות נתמכות ב-CMC","סוגי מוצר נתמכים ב-CMC"], v:["A","B","O"]},
+{id:"sys_bi", lane:"dn", col:47, kind:"sys", t:"ניטור, אנליטיקה ודשבורדים",
+ s:"ביצועי מערכת · ביצועים עסקיים · איכות", nw:"רכיב חדש", v:["A","B","O"]},
 {id:"rule_stp",    lane:"db", row:1, span:["d_stp","d_stp"], kind:"cy rule", ic:"ic-rules",
  t:"מיני-חוקת STP", s:"מתי מותר לכתוב ל-BPR בלי חתם", v:["A","B","O"]}
 ];
@@ -563,7 +598,15 @@ const GROUPS = [
 
 const EDGES = [
 /* ===== קליטה, חדר הסריקה, ופתיחת מקרה ===== */
+{f:"p_agent", t:"ch_sms", k:"x", v:["A","B"]},
+{f:"p_agent", t:"ch_formali", k:"x", v:["A","B"]},
+{f:"p_agent", t:"ch_direct", k:"x", l:"הסוכן בוחר ערוץ", v:["A","B"]},
+{f:"ch_sms", t:"ch_mail", k:"x", v:["A","B"]},
+{f:"ch_formali", t:"ch_mail", k:"x", v:["A","B"]},
+{f:"ch_direct", t:"ch_mail", k:"x", l:"מייל עם מסמכים", v:["A","B"]},
 {f:"ch_mail", t:"f_intake", k:"main", v:["A","B"]},
+{f:"p_client", t:"ch_online", k:"x", v:["O"]},
+{f:"d_scan_support", t:"sys_image", k:"x", l:"ההחלטה מנוהלת ב-Image", v:["A","B"]},
 {f:"f_intake", t:"d_scan_support", k:"main", v:["A","B"]},
 
 /* המסלול הנתמך · Docah, תיוק אוטומטי, ואולי שירות טופס */
@@ -572,8 +615,8 @@ const EDGES = [
 {f:"f_docah_class", t:"db_profile", k:"w", l:"תוכן מחולץ", v:["A","B"]},
 {f:"f_docah_class", t:"f_autofile", k:"main", v:["A","B"]},
 {f:"f_autofile", t:"sys_image", k:"x", l:"תיוק ל-Documentum", v:["A","B"]},
-{f:"f_autofile", t:"d_tofes", k:"main", v:["A","B"]},
-{f:"d_tofes", t:"f_tofes", k:"main", l:"כן", v:["A","B"]},
+{f:"f_autofile", t:"d_extract", k:"main", v:["A","B"]},
+{f:"d_extract", t:"f_tofes", k:"main", l:"כן", v:["A","B"]},
 {f:"f_tofes", t:"sys_glaxon", k:"x", l:"מיפוי שדות ל-XML אחיד", v:["A","B"]},
 {f:"f_tofes", t:"f_case", k:"main", l:"תיק מלא · בלי רפרנט, ממשיך אוטומטית", v:["A","B"]},
 
@@ -582,29 +625,29 @@ const EDGES = [
 {f:"f_keyer", t:"sys_image", k:"x", l:"תיוק ל-Documentum", v:["A","B"]},
 {f:"f_keyer", t:"sys_bpr", k:"x", l:"התיוק פותח תור עבודה ריק", v:["A","B"]},
 {f:"f_keyer", t:"f_referent", k:"main", via:"dn", l:"תור עבודה ריק", v:["A","B"]},
-{f:"d_tofes", t:"f_referent", k:"c", l:"לא · נפתח תור עבודה ריק", v:["A","B"]},
+{f:"d_extract", t:"f_referent", k:"c", l:"לא · נפתח תור עבודה ריק", v:["A","B"]},
 {f:"f_referent", t:"f_case", k:"main", l:"אחרי ההזנה הידנית", v:["A","B"]},
 
 /* השידור · פס אחד שפותח תיק מלא ב-BPR, שלושה מפיקים */
 {f:"sys_glaxon", t:"sys_bpr", k:"x", l:"פותח תיק מלא", v:["A","B","O"]},
-{f:"ch_online", t:"sys_glaxon", k:"x", l:"Online פונה לאותו שידור", v:["O"]},
-{f:"ch_online", t:"f_case", k:"main", l:"כל פנייה נפתחת כתיק ב-BPR", v:["O"]},
+
+{f:"ch_online", t:"f_tofes", k:"main", l:"פונה ישירות ל-MFG", v:["O"]},
 {f:"ch_online", t:"d_make_profile", k:"as", l:"מתחיל ברקע בהזנת ת\"ז", v:["O"]},
 
 /* ===== אזור 3 · גרסה A · ההכרעה ב-BPR ===== */
 {f:"f_case", t:"d_uw_bpr", k:"main", via:"up", l:"ה-BPR בודק", v:["A"]},
 {f:"sys_haim", t:"d_uw_bpr", k:"x", l:"לוגיקה קיימת", v:["A"]},
-{f:"d_uw_bpr", t:"out_green", k:"g", l:"לא נדרש חיתום", v:["A"]},
+{f:"d_uw_bpr", t:"out_green_a", k:"g", l:"לא נדרש חיתום", v:["A"]},
 {f:"d_uw_bpr", t:"db_case", k:"c", l:"נדרש חיתום · למלאי לחיתום", v:["A"]},
 {f:"d_uw_bpr", t:"d_make_profile", k:"main", via:"up", l:"טריגר API · מיד ליצירת פרופיל", v:["A"]},
 
 /* ===== אזור 3 · גרסאות B ו-Online · הראוטר ===== */
-{f:"f_case", t:"f_router_anomaly", k:"main", v:["B","O"]},
+{f:"f_case", t:"d_make_profile", k:"main", l:"הפרופיל נבנה ראשון", v:["B","O"]},
 {f:"f_router_anomaly", t:"f_router_docs", k:"main", v:["B","O"]},
 {f:"f_router_docs", t:"d_docs_ok", k:"main", v:["B","O"]},
 {f:"d_docs_ok", t:"d_route", k:"main", l:"הכל קיים", v:["B","O"]},
-{f:"d_route", t:"out_green", k:"g", l:"הפקה ירוקה", v:["B","O"]},
-{f:"d_route", t:"d_make_profile", k:"main", l:"נדרש חיתום", v:["B","O"]},
+{f:"d_route", t:"out_green_b", k:"g", l:"הפקה ירוקה", v:["B","O"]},
+{f:"d_route", t:"d_maturity", k:"main", l:"נדרש חיתום", v:["B","O"]},
 {f:"d_docs_ok", t:"f_missing", k:"c", l:"חסרים מסמכים", v:["B","O"]},
 {f:"f_missing", t:"f_bpr_letter", k:"c", v:["B","O"]},
 {f:"f_bpr_letter", t:"ch_mail", k:"as", l:"החוסרים חוזרים בערוץ ההפצה", v:["B"]},
@@ -644,7 +687,8 @@ const EDGES = [
 {f:"db_profile", t:"f_router_docs", k:"r", l:"אילו מסמכים קיימים", v:["B","O"]},
 
 /* ===== אזור 5 · מנוע החיתום ===== */
-{f:"p_header", t:"d_maturity", k:"main", l:"טריגר · מיד לבדיקת החיתום", v:["A","B","O"]},
+{f:"p_header", t:"d_maturity", k:"main", l:"טריגר · מיד לבדיקת החיתום", v:["A"]},
+{f:"p_header", t:"f_router_anomaly", k:"main", l:"הפרופיל מוכן · עכשיו לראוטר", v:["B","O"]},
 {f:"d_maturity", t:"d_coverage", k:"main", l:"מעל הסף", v:["A","B","O"]},
 {f:"d_maturity", t:"u1", k:"c", via:"dn", l:"מתחת לסף · ישר לחתם", v:["A","B","O"]},
 {f:"d_coverage", t:"e_internal", k:"main", l:"כיסוי נתמך", v:["A","B","O"]},
@@ -713,6 +757,10 @@ const EDGES = [
 
 /* ===== אזור 7 · חתם והפקה ===== */
 {f:"db_case", t:"u1", k:"r", l:"מקרים פתוחים", v:["A","B","O"]},
+{f:"db_audit", t:"sys_bi", k:"r", l:"ביצועים טכניים ו-Fallbacks", v:["A","B","O"]},
+{f:"db_uwres", t:"sys_bi", k:"r", l:"שיעור STP ותמהיל ההחלטות", v:["A","B","O"]},
+{f:"db_case", t:"sys_bi", k:"r", l:"נפחים וזמני מחזור", v:["A","B","O"]},
+{f:"db_profile", t:"sys_bi", k:"r", l:"איכות הפרופיל", v:["A","B","O"]},
 {f:"sys_citrix", t:"u1", k:"x", l:"הזדהות", v:["A","B","O"]},
 {f:"u1", t:"u2", k:"main", v:["A","B","O"]},
 {f:"sys_bpr", t:"u2", k:"xa", l:"הזנקה · קונטקסט טעון", v:["A","B","O"]},
@@ -736,30 +784,30 @@ const EDGES = [
 /* ==========================================================================
    2 · פריסה · תלוית גרסה
    ========================================================================== */
-const PITCH=272, NW=212, NH=100, DIA=158, PAD=150, GUTTER=0.55;
+const PITCH=310, NW=212, NH=100, DIA=158, PAD=170, GUTTER=0.75;
 
 const Y = {
   rgn:  20,
   spine:{y:104,  h:58},
-  chTop:{y:182,  rows:3, gap:18},
-  sys:  {y:234,  h:86},
-  chSys:{y:350,  rows:9, gap:19},
-  up:   {y:542,  h:96},
-  chUp: {y:682,  rows:4, gap:19},
-  flow: {y:806,  h:NH},
-  chDn: {y:954,  rows:3, gap:19},
-  dn:   {y:1038, h:96},
-  chDb: {y:1166, rows:6, gap:19},
-  db0:  {y:1306, h:120},
-  db1:  {y:1462, h:120}
+  chTop:{y:184,  rows:4,  gap:21},
+  sys:  {y:266,  h:86},
+  chSys:{y:396,  rows:13, gap:21},
+  up:   {y:704,  h:96},
+  chUp: {y:870,  rows:8,  gap:21},
+  flow: {y:1054, h:NH},
+  chDn: {y:1214, rows:10, gap:21},
+  dn:   {y:1444, h:96},
+  chDb: {y:1584, rows:14, gap:21},
+  db0:  {y:1900, h:120},
+  db1:  {y:2056, h:120}
 };
-const H = 1640;
+const H = 2240;
 const BANDS = [
-  {y:90,   h:256},   /* מערכות ומקורות */
-  {y:502,  h:660},   /* הזרימה */
-  {y:1288, h:314}    /* נתונים · מאגרים */
+  {y:84,   h:292},   /* מערכות ומקורות */
+  {y:666,  h:898},   /* הזרימה */
+  {y:1876, h:314}    /* נתונים · מאגרים */
 ];
-const LANETAGS = [{y:277,t:"מערכות ומקורות"},{y:856,t:"הזרימה"},{y:1445,t:"נתונים · מאגרים"}];
+const LANETAGS = [{y:309,t:"מערכות ומקורות"},{y:1104,t:"הזרימה"},{y:2033,t:"נתונים · מאגרים"}];
 
 let V="A", GHOST=false, FOCUS=null;
 let N={}, W=0, POS={}, routed=[], elOf={}, rgnEls=[], grpEls=[];
@@ -945,6 +993,13 @@ function midPath(A,B,e){
   const y=chan(key,A.cxp,B.cxp,26);
   return [[A.cxp,edgeY(A)],[A.cxp,y],[B.cxp,y],[B.cxp,edgeY(B)]];
 }
+/* התג יושב קרוב לצומת המוצא, כדי שייקרא כמו "השלב הבא הוא N" */
+function numPos(pts){
+  const a=pts[0], b=pts[1]||pts[0];
+  const L=Math.hypot(b[0]-a[0],b[1]-a[1])||1;
+  const t=Math.min(0.42, 32/L);
+  return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t];
+}
 function labelPos(pts,A,B){
   if(pts.length===2){ const lift=A&&B?Math.max(A.h,B.h)/2+12:24;
     return [(pts[0][0]+pts[1][0])/2,(pts[0][1]+pts[1][1])/2-lift]; }
@@ -1010,7 +1065,9 @@ function build(){
   });
 
   /* גוון וכותרת לכל אזור · עוזר לעין לזהות איפה נגמר שלב ומתחיל הבא */
-  const visN=Object.values(N).filter(n=>n.col!=null);
+  const visN=Object.values(N).filter(n=>n.rgn!=null);
+  const rgNum=[]; let rn=0;
+  REGIONS.forEach((rg,ri)=>{ rgNum[ri]= visN.some(n=>n.rgn===ri) ? ++rn : null; });
   REGIONS.forEach((rg,ri)=>{
     const inR=visN.filter(n=>n.rgn===ri);
     if(!inR.length){ rgnEls.push(null); return; }
@@ -1027,7 +1084,7 @@ function build(){
     nodesEl.appendChild(rl); wrap.push(rl);
     const hd=document.createElement("div"); hd.className="rgnhd";
     hd.style.cssText=`left:${x1}px;top:${Y.rgn}px;width:${x2-x1}px;`;
-    hd.innerHTML=`<i style="background:${rg.hue}">${rg.n}</i><span class="tx">`+
+    hd.innerHTML=`<i style="background:${rg.hue}">${rgNum[ri]}</i><span class="tx">`+
       `<span class="he" style="color:${rg.hue}">${rg.name}</span>`+
       `<span class="en" style="color:${rg.hue}">${rg.en}</span></span>`;
     nodesEl.appendChild(hd); wrap.push(hd);
@@ -1096,6 +1153,12 @@ function build(){
     .sort((a,b)=>(ORDER[a.e.k]||0)-(ORDER[b.e.k]||0));
 
   const hitG=document.createElementNS(NS,"g");
+  /* מספור · רק הזרימה הראשית, לפי סדר ההתקדמות בעמודות */
+  const seqOf={};
+  routed.map((rt,i)=>({i,rt})).filter(x=>x.rt.e.k==="main")
+    .sort((a,b)=>{const A=N[a.rt.e.f],B=N[b.rt.e.f];
+      return (A.dc-B.dc)||(N[a.rt.e.t].dc-N[b.rt.e.t].dc);})
+    .forEach((x,n)=>{ seqOf[x.i]=n+1; });
   routed.forEach((rt,i)=>{
     const e=rt.e, d=pathOf(rt.pts);
     /* הילה בהירה מתחת לקווים החזקים · מה שגורם להם להיקרא ברציפות מעל הצטלבויות */
@@ -1125,6 +1188,13 @@ function build(){
       l.style.cssText=`left:${rt.lp[0]}px;top:${rt.lp[1]}px;`;
       l.textContent=e.l; nodesEl.appendChild(l); rt.lbl=l;
     }
+    if(seqOf[i]){
+      const b=document.createElement("div"); b.className="enum";
+      b.textContent=seqOf[i];
+      const q=numPos(rt.pts);
+      b.style.cssText=`left:${q[0]}px;top:${q[1]}px;`;
+      nodesEl.appendChild(b); rt.num=b; rt.np=q;
+    }
   });
   svg.appendChild(hitG);
   hitG.addEventListener("pointerenter",ev=>{
@@ -1144,6 +1214,7 @@ function build(){
 /* פיזור תוויות · מונע חפיפה בין תווית לתווית ובין תווית לצומת */
 function spread(){
   const boxes=Object.values(N), placed=[];
+  routed.filter(r=>r.num).forEach(r=>placed.push({x:r.np[0]-13,y:r.np[1]-13,w:26,h:26}));
   const hit=(a,b,m)=>a.x<b.x+b.w+m&&a.x+a.w+m>b.x&&a.y<b.y+b.h+m&&a.y+a.h+m>b.y;
   routed.filter(r=>r.lbl).forEach(r=>{
     const w=r.lbl.offsetWidth||90,h=r.lbl.offsetHeight||22;
@@ -1162,6 +1233,14 @@ function spread(){
 /* ---------- מצב מעקב · איזה צומת או חץ נמצא כרגע במיקוד ---------- */
 let TRACE=null, PIN=null, HOVER=false, FOCUSON=false, DRAGGED=false;
 function clearPin(){ PIN=null; setTrace(null); }
+function syncPinbar(){
+  const bar=document.getElementById("pinbar");
+  if(!PIN){ bar.classList.remove("on"); return; }
+  const t = PIN.kind==="node" ? (N[PIN.id]?N[PIN.id].t:"") : (()=>{ const e=routed[PIN.id].e;
+    return (N[e.f]?N[e.f].t:"")+" ← "+(N[e.t]?N[e.t].t:""); })();
+  document.getElementById("pintxt").textContent="מיקוד · "+t;
+  bar.classList.add("on");
+}
 
 function traceNode(id){
   const nodes=new Set([id]), edges=new Set();
@@ -1173,7 +1252,7 @@ function traceEdge(i){
   const e=routed[i].e;
   return {nodes:new Set([e.f,e.t]),edges:new Set([i]),root:null};
 }
-function setTrace(t){ TRACE=t; paint(); }
+function setTrace(t){ TRACE=t; paint(); syncPinbar(); }
 
 /* צביעה · צל של גרסה אחרת, מיקוד אזור, ומעקב אחרי צומת או חץ */
 function paint(){
@@ -1193,6 +1272,8 @@ function paint(){
     const out=(FOCUS!=null&&A.rgn!==FOCUS&&B.rgn!==FOCUS)||!on;
     rt.el.classList.toggle("ghost",gh); rt.el.classList.toggle("out",out);
     rt.el.classList.toggle("trace",!!(te&&te.has(i)));
+    if(rt.num){ rt.num.classList.toggle("ghost",gh); rt.num.classList.toggle("out",out);
+      rt.num.classList.toggle("trace",!!(te&&te.has(i))); }
     if(rt.halo) rt.halo.classList.toggle("out",out);
     if(rt.lbl){ rt.lbl.classList.toggle("ghost",gh); rt.lbl.classList.toggle("out",out);
       rt.lbl.classList.toggle("trace",!!(te&&te.has(i))); }
@@ -1233,11 +1314,7 @@ document.getElementById("tgFocus").addEventListener("change",ev=>{
   FOCUSON=ev.target.checked;
   if(!FOCUSON){ FOCUS=null; paint(); buildRuler(); } else syncRuler();
 });
-/* לחיצה על הרקע · ניקוי מיקוד */
-stage.addEventListener("click",ev=>{
-  if(ev.target.closest&&ev.target.closest(".n")) return;
-  if(PIN) clearPin();
-});
+/* לחיצה על הרקע לא מנקה · רק Esc, לפי בקשת המשתמש */
 
 let k=1,panX=0,panY=0;
 const MINK=0.05,MAXK=2.2;
@@ -1309,7 +1386,9 @@ const rtrack=document.getElementById("rtrack"),rview=document.getElementById("rv
 let segs=[];
 function buildRuler(){
   [...rtrack.querySelectorAll(".rs")].forEach(e=>e.remove());
-  const visN=Object.values(N).filter(n=>n.col!=null);
+  const visN=Object.values(N).filter(n=>n.rgn!=null);
+  const rgNum=[]; let rn=0;
+  REGIONS.forEach((rg,i)=>{ rgNum[i]= visN.some(n=>n.rgn===i) ? ++rn : null; });
   const ext=REGIONS.map((rg,i)=>{
     const inR=visN.filter(n=>n.rgn===i);
     return inR.length?{x1:Math.min(...inR.map(n=>n.x))-42,x2:Math.max(...inR.map(n=>n.x+n.w))+42}:null;
@@ -1320,7 +1399,7 @@ function buildRuler(){
     const d=document.createElement("div"); d.className="rs";
     d.style.flex=`0 1 ${((ext[i].x2-ext[i].x1)/tot)*100}%`;
     d.style.background=rg.hue+"26";
-    d.innerHTML=`<span style="color:${rg.hue}">${rg.n} · ${rg.name}</span>`;
+    d.innerHTML=`<span style="color:${rg.hue}">${rgNum[i]} · ${rg.name}</span>`;
     d.onclick=()=>panTo(ext[i]);                    /* לחיצה מנווטת בלבד, לא מקבעת מיקוד */
     d.title="נווט לאזור "+rg.name;
     if(FOCUS===i) d.classList.add("foc");
@@ -1340,7 +1419,7 @@ function syncRuler(){
   const a=Math.max(0,Math.min(1,panX/(k*W))),b=Math.max(0,Math.min(1,(panX+vw())/(k*W)));
   rview.style.left=(a*tw)+"px"; rview.style.width=Math.max(10,(b-a)*tw)+"px";
   const cxw=(panX+vw()/2)/k;
-  const visN=Object.values(N).filter(n=>n.col!=null);
+  const visN=Object.values(N).filter(n=>n.rgn!=null);
   let here=null;
   segs.forEach((s,i)=>{ if(!s)return;
     const inR=visN.filter(n=>n.rgn===i);
