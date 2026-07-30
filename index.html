@@ -476,7 +476,7 @@ const NODES = [
  s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
 {id:"e_internal", lane:"flow", col:23, no:3, t:"חיתום פנימי", s:"אבחנה אחת בכל פנייה · פר קבוצת סיכון", v:["A","B","O"]},
 {id:"d_resolved", lane:"flow", col:24, no:4, kind:"dia", t:"כל האבחנות הוכרעו?", s:"אחרת · יציאה ל-Swiss Re", v:["A","B","O"]},
-{id:"e_src",      lane:"flow", col:25, no:5, t:"ניתוב מקור חיצוני", s:"פר אבחנה · CMC או Scout", v:["A","B","O"]},
+{id:"e_src",      lane:"flow", col:25, no:5, t:"ניתוב מקור חיצוני", s:"פר אבחנה · אבחנה נתמכת וסוג מוצר", v:["A","B","O"]},
 {id:"e_cmc",      lane:"up",   col:26, no:6, t:"פנייה ל-CMC", s:"נתונים כמותיים · תשובה אחת", v:["A","B","O"]},
 {id:"e_scout",    lane:"flow", col:26, no:6, t:"פנייה ל-Scout", s:"LLM · info ואז rating", v:["A","B","O"]},
 {id:"e_ingest",   lane:"flow", col:27, no:7, t:"קליטה, תרגום ו-Parsing", s:"הסבר מילולי והמלצה מספרית", v:["A","B","O"]},
@@ -524,6 +524,9 @@ const NODES = [
 {id:"rule_uw",     lane:"db", row:1, span:["e_internal","e_internal"], kind:"cy rule", ic:"ic-rules",
  t:"חוקת חיתום פנימית", s:"שכבה דטרמיניסטית מקדימה",
  tags:["אבחנות · החלטות","מקצועות ותחביבים · החלטות"], v:["A","B","O"]},
+{id:"rule_src",    lane:"db", row:1, span:["e_src","e_src"], kind:"cy rule", ic:"ic-rules",
+ t:"חוקת ניתוב CMC מול Scout", s:"שתי בדיקות, בסדר הזה",
+ tags:["אבחנות נתמכות ב-CMC","סוגי מוצר נתמכים ב-CMC"], v:["A","B","O"]},
 {id:"rule_stp",    lane:"db", row:1, span:["d_stp","d_stp"], kind:"cy rule", ic:"ic-rules",
  t:"מיני-חוקת STP", s:"מתי מותר לכתוב ל-BPR בלי חתם", v:["A","B","O"]}
 ];
@@ -632,8 +635,8 @@ const EDGES = [
 {f:"e_internal", t:"d_resolved", k:"main", v:["A","B","O"]},
 {f:"d_resolved", t:"out_diag", k:"g", via:"up", l:"הוכרע פנימית · בלי Swiss Re", v:["A","B","O"]},
 {f:"d_resolved", t:"e_src", k:"main", l:"יש הפניה לחתם · לפחות באבחנה אחת", v:["A","B","O"]},
-{f:"e_src", t:"e_cmc",   k:"main", via:"up", l:"קרדיו ומטבולי", v:["A","B","O"]},
-{f:"e_src", t:"e_scout", k:"main", l:"שאר התחלואה", v:["A","B","O"]},
+{f:"e_src", t:"e_cmc",   k:"main", via:"up", l:"ברשימה, ומוצר נתמך", v:["A","B","O"]},
+{f:"e_src", t:"e_scout", k:"main", l:"לא ברשימה, או MedEx ונוער", v:["A","B","O"]},
 {f:"e_cmc",   t:"svc_pii", k:"x", v:["A","B","O"]},
 {f:"e_scout", t:"svc_pii", k:"x", l:"תמיד ביציאה", v:["A","B","O"]},
 {f:"e_scout", t:"sys_llm", k:"x", l:"בניית Summary בין הקריאות", v:["A","B","O"]},
@@ -654,6 +657,7 @@ const EDGES = [
 {f:"rule_cov", t:"d_coverage", k:"r", l:"אותה חוקה · צרכן שני", v:["A","B","O"]},
 {f:"rule_thresh", t:"d_maturity", k:"r", l:"הסף שהעסק הגדיר", v:["A","B","O"]},
 {f:"rule_uw", t:"e_internal", k:"r", l:"שתי טבלאות ההחלטות", v:["A","B","O"]},
+{f:"rule_src", t:"e_src", k:"r", l:"אבחנה נתמכת, ואז סוג המוצר", v:["A","B","O"]},
 {f:"rule_docs", t:"f_router_docs", k:"r", v:["B","O"]},
 {f:"rule_route", t:"d_route", k:"r", v:["B","O"]},
 
