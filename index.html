@@ -400,17 +400,18 @@ const REGIONS = [
 ];
 /* גבולות האזורים לפי עמודות תכן */
 const RGN_OF = c =>
-  c<=0 ?0 : c<=4 ?1 : c<=9 ?2 : c<=18 ?3 : c<=26 ?4 : c<=29 ?5 : 6;
+  c<=0 ?0 : c<=6 ?1 : c<=11 ?2 : c<=20 ?3 : c<=28 ?4 : c<=31 ?5 : 6;
 
 const NODES = [
 /* ---------- פס הליבה ---------- */
-{id:"sys_bpr", lane:"spine", span:["f_extract_form","u7"], kind:"spine",
+{id:"sys_bpr", lane:"spine", span:["f_case","u7"], kind:"spine",
  t:"BPR · הליבה", s:"Source of Truth · מקרה הפקה, תורי עבודה, מכתבים, הפקה", v:["A","B","O"]},
 
 /* ---------- מערכות, ערוצים ושירותים ---------- */
 {id:"ch_mail",   lane:"sys", anchor:"f_intake", off:-0.15, kind:"sys", t:"תיבת מייל ארגונית", s:"ערוץ Offline · רוב הנפח", v:["A","B"]},
-{id:"ch_glaxon", lane:"sys", anchor:"f_scan",   off:0,     kind:"sys", t:"שידור Glaxon", s:"XML אחיד · מיעוט", v:["A","B"]},
-{id:"ch_online", lane:"sys", anchor:"f_case",   off:-1.2,  kind:"sys", t:"מכירות אונליין", s:"אינטראקטיבי · RT", v:["O"]},
+{id:"sys_glaxon", lane:"sys", anchor:"f_case", off:-0.05, kind:"sys", t:"שידור · Glaxon",
+ s:"XML אחיד · פותח תיק מלא ב-BPR", v:["A","B","O"]},
+{id:"ch_online", lane:"sys", anchor:"f_case",   off:-1.35, kind:"sys", t:"מכירות אונליין", s:"אינטראקטיבי · RT", v:["O"]},
 {id:"sys_haim",  lane:"sys", anchor:"d_uw_bpr", off:0,     kind:"sys", t:"חיים 2000 וטבלאות DPT", s:"לוגיקת הניתוב הקיימת ב-BPR", v:["A"]},
 {id:"sys_docah", lane:"sys", anchor:"p3",  off:-1.15, kind:"sys", t:"Docah", s:"חילוץ מובנה · הצהרות בריאות", v:["A","B","O"]},
 {id:"sys_llm",   lane:"sys", anchor:"p3",  off:0.9,   kind:"sys", t:"שירות LLM", s:"OCR · חילוץ ישויות · Summary", v:["A","B","O"]},
@@ -424,70 +425,78 @@ const NODES = [
 /* ---------- אזור 1 · קליטה ---------- */
 {id:"f_intake", lane:"flow", col:0, no:1, t:"פנייה נכנסת", s:"הצעה · הצהרה · מסמכים", v:["A","B"]},
 
-/* ---------- אזור 2 · פתיחת מקרה ---------- */
-{id:"f_scan",         lane:"flow", col:1, no:1, t:"חדר הסריקה", s:"סריקה · זיהוי · תיוק", v:["A","B"]},
-{id:"f_extract_form", lane:"flow", col:2, no:2, t:"Docah · חילוץ מובנה", s:"מבנה קבוע מראש", v:["A","B"]},
-{id:"f_tofes",        lane:"flow", col:3, no:3, t:"שירות טופס", s:"מיפוי שדות ל-BPR", nw:"רכיב חדש · חא\"ת", v:["A","B"]},
-{id:"f_case",         lane:"flow", col:4, no:4, t:"פתיחת מקרה הפקה", s:"מלא, בלי רפרנט", v:["A","B","O"]},
-{id:"f_referent",     lane:"dn",   col:4, kind:"dash", t:"רפרנט · הזנה ידנית", s:"ענף חלופי · היעד לבטל", v:["A","B"]},
+/* ---------- אזור 2 · פתיחת מקרה · חדר הסריקה ---------- */
+{id:"d_scan_support", lane:"flow", col:1, no:1, kind:"dia diasys", t:"נתמך בחדר הסריקה?",
+ s:"תלוי בסוג התהליך", v:["A","B"]},
+/* המסלול הנתמך · אוטומטי */
+{id:"f_docah_class", lane:"flow", col:2, no:2, t:"Docah · סיווג וחילוץ", s:"סיווג מסמכים וחילוץ נתונים", v:["A","B"]},
+{id:"f_autofile",    lane:"flow", col:3, no:3, t:"תיוק אוטומטי", s:"בעמדת מפתוח · בלי ממפתח", v:["A","B"]},
+{id:"d_tofes",       lane:"flow", col:4, no:4, kind:"dia", t:"שימוש בשירות טופס?", v:["A","B"]},
+{id:"f_tofes",       lane:"flow", col:5, no:5, t:"שירות טופס", s:"מיפוי שדות ל-XML של השידור",
+ nw:"רכיב חדש · חא\"ת", v:["A","B"]},
+/* המסלול הידני · שני הענפים שהיעד לבטל */
+{id:"f_keyer",    lane:"dn", col:2, kind:"dash", t:"ממפתח · תיוק ידני", s:"עמדת מפתוח · חדר הסריקה", v:["A","B"]},
+{id:"f_referent", lane:"dn", col:4, kind:"dash", t:"רפרנט · הזנה ידנית", s:"מזין את הנתונים מהמסמכים", v:["A","B"]},
+/* פתיחת מקרה ההפקה */
+{id:"f_case", lane:"flow", col:6, no:6, t:"פתיחת מקרה הפקה", s:"מלא, או ריק שהרפרנט מילא", v:["A","B","O"]},
 
 /* ---------- אזור 3 · ניתוב ---------- */
 /* גרסה A · ההכרעה כולה בתוך BPR */
-{id:"d_uw_bpr", lane:"up", col:5, kind:"dia diasys", t:"נדרש חיתום?",
+{id:"d_uw_bpr", lane:"up", col:7, kind:"dia diasys", t:"נדרש חיתום?",
  s:"ה-BPR מכריע מול חיים 2000", v:["A"]},
 /* גרסאות B ו-Online · ראוטר ההשלמות */
-{id:"f_router_anomaly", lane:"flow", col:5, no:1, t:"השוואת הצהרה לפרופיל", s:"זיהוי אנומליות",
+{id:"f_router_anomaly", lane:"flow", col:7, no:1, t:"השוואת הצהרה לפרופיל", s:"זיהוי אנומליות",
  q:"שאלה פתוחה · סנכרון ב-Online. ברירת מחדל: המתנה עם Timeout", v:["B","O"]},
-{id:"f_router_docs",    lane:"flow", col:6, no:2, t:"אילו מסמכים נדרשים", s:"לולאה על כל אבחנה", v:["B","O"]},
-{id:"d_docs_ok",        lane:"flow", col:7, no:3, kind:"dia", t:"כל המסמכים קיימים?", v:["B","O"]},
-{id:"d_route",          lane:"flow", col:8, no:4, kind:"dia", t:"חיתום או הפקה ירוקה?", v:["B","O"]},
-{id:"f_missing",    lane:"dn", col:8, kind:"warn", t:"חיווי חוסרים", s:"רשימה לכל אבחנה", v:["B","O"]},
-{id:"f_bpr_letter", lane:"dn", col:9, kind:"sys",  t:"BPR שולח דרישת השלמה", s:"מייל ב-Offline · מסך ב-Online", v:["B","O"]},
-{id:"out_green", lane:"up", col:9, kind:"ok", t:"הפקה ללא חיתום", s:"מבוצעת ב-BPR · מיידית", v:["A","B","O"]},
+{id:"f_router_docs",    lane:"flow", col:8, no:2, t:"אילו מסמכים נדרשים", s:"לולאה על כל אבחנה", v:["B","O"]},
+{id:"d_docs_ok",        lane:"flow", col:9, no:3, kind:"dia", t:"כל המסמכים קיימים?", v:["B","O"]},
+{id:"d_route",          lane:"flow", col:10, no:4, kind:"dia", t:"חיתום או הפקה ירוקה?", v:["B","O"]},
+{id:"f_missing",    lane:"dn", col:10, kind:"warn", t:"חיווי חוסרים", s:"רשימה לכל אבחנה", v:["B","O"]},
+{id:"f_bpr_letter", lane:"dn", col:11, kind:"sys",  t:"BPR שולח דרישת השלמה", s:"מייל ב-Offline · מסך ב-Online", v:["B","O"]},
+{id:"out_green", lane:"up", col:11, kind:"ok", t:"הפקה ללא חיתום", s:"מבוצעת ב-BPR · מיידית", v:["A","B","O"]},
 
 /* ---------- אזור 4 · פרופיל רפואי ---------- */
-{id:"d_make_profile", lane:"flow", col:10, no:1, kind:"dia", t:"לייצר פרופיל?", s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
-{id:"p1",       lane:"flow", col:11, no:2, t:"בדיקת פרופיל קיים", s:"מתי עודכן לאחרונה", v:["A","B","O"]},
-{id:"d_exists", lane:"flow", col:12, no:3, kind:"dia", t:"קיים פרופיל?", v:["A","B","O"]},
-{id:"p2",       lane:"flow", col:13, no:4, t:"משיכת מסמכים", s:"רפואיים · תביעות · השלמות", v:["A","B","O"]},
-{id:"p3",       lane:"flow", col:14, no:5, t:"חילוץ תוכן", s:"ניתוב המסמך לפי סוגו", v:["A","B","O"]},
-{id:"p4",       lane:"flow", col:15, no:6, t:"ניקוי וסינון", s:"כפילויות · שייכות ללקוח", v:["A","B","O"]},
+{id:"d_make_profile", lane:"flow", col:12, no:1, kind:"dia", t:"לייצר פרופיל?", s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
+{id:"p1",       lane:"flow", col:13, no:2, t:"בדיקת פרופיל קיים", s:"מתי עודכן לאחרונה", v:["A","B","O"]},
+{id:"d_exists", lane:"flow", col:14, no:3, kind:"dia", t:"קיים פרופיל?", v:["A","B","O"]},
+{id:"p2",       lane:"flow", col:15, no:4, t:"משיכת מסמכים", s:"רפואיים · תביעות · השלמות", v:["A","B","O"]},
+{id:"p3",       lane:"flow", col:16, no:5, t:"חילוץ תוכן", s:"ניתוב המסמך לפי סוגו", v:["A","B","O"]},
+{id:"p4",       lane:"flow", col:17, no:6, t:"ניקוי וסינון", s:"כפילויות · שייכות ללקוח", v:["A","B","O"]},
 /* שלושה חילוצים במקביל, כולם מול LLM */
-{id:"p_events",  lane:"up",   col:16, no:7, t:"חילוץ אירועים", s:"אשפוז · בדיקה · ניתוח · מרשם", v:["A","B","O"]},
-{id:"p_diag",    lane:"flow", col:16, no:7, t:"חילוץ אבחנות", s:"כולל פענוח ראשי תיבות", v:["A","B","O"]},
-{id:"p_metrics", lane:"dn",   col:16, no:7, t:"חילוץ מדדים", s:"BMI · לחץ דם · HbA1c", v:["A","B","O"]},
-{id:"p_link",   lane:"flow", col:17, no:8, t:"שיוך אירועים לאבחנות", s:"סיפור רפואי לכל אבחנה", v:["A","B","O"]},
-{id:"p_header", lane:"flow", col:18, no:9, t:"עדכון Header", s:"אמינות · אחוז מסמכים שנקראו", v:["A","B","O"]},
+{id:"p_events",  lane:"up",   col:18, no:7, t:"חילוץ אירועים", s:"אשפוז · בדיקה · ניתוח · מרשם", v:["A","B","O"]},
+{id:"p_diag",    lane:"flow", col:18, no:7, t:"חילוץ אבחנות", s:"כולל פענוח ראשי תיבות", v:["A","B","O"]},
+{id:"p_metrics", lane:"dn",   col:18, no:7, t:"חילוץ מדדים", s:"BMI · לחץ דם · HbA1c", v:["A","B","O"]},
+{id:"p_link",   lane:"flow", col:19, no:8, t:"שיוך אירועים לאבחנות", s:"סיפור רפואי לכל אבחנה", v:["A","B","O"]},
+{id:"p_header", lane:"flow", col:20, no:9, t:"עדכון Header", s:"אמינות · אחוז מסמכים שנקראו", v:["A","B","O"]},
 
 /* ---------- אזור 5 · מנוע החיתום ---------- */
 /* שער כניסה · שתי בדיקות, רכיב אחד */
-{id:"d_maturity", lane:"flow", col:19, no:1, kind:"dia", t:"בשלות הפרופיל?",
+{id:"d_maturity", lane:"flow", col:21, no:1, kind:"dia", t:"בשלות הפרופיל?",
  s:"אחוז מסמכים שנקראו מעל הסף", v:["A","B","O"]},
-{id:"d_coverage", lane:"flow", col:20, no:2, kind:"dia", t:"הכיסוי נתמך לחיתום?",
+{id:"d_coverage", lane:"flow", col:22, no:2, kind:"dia", t:"הכיסוי נתמך לחיתום?",
  s:"לפי חוקת סוגי כיסוי", v:["A","B","O"]},
-{id:"e_internal", lane:"flow", col:21, no:3, t:"חיתום פנימי", s:"אבחנה אחת בכל פנייה · פר קבוצת סיכון", v:["A","B","O"]},
-{id:"d_resolved", lane:"flow", col:22, no:4, kind:"dia", t:"כל האבחנות הוכרעו?", s:"אחרת · יציאה ל-Swiss Re", v:["A","B","O"]},
-{id:"e_src",      lane:"flow", col:23, no:5, t:"ניתוב מקור חיצוני", s:"פר אבחנה · CMC או Scout", v:["A","B","O"]},
-{id:"e_cmc",      lane:"up",   col:24, no:6, t:"פנייה ל-CMC", s:"נתונים כמותיים · תשובה אחת", v:["A","B","O"]},
-{id:"e_scout",    lane:"flow", col:24, no:6, t:"פנייה ל-Scout", s:"LLM · info ואז rating", v:["A","B","O"]},
-{id:"e_ingest",   lane:"flow", col:25, no:7, t:"קליטה, תרגום ו-Parsing", s:"הסבר מילולי והמלצה מספרית", v:["A","B","O"]},
-{id:"out_diag",   lane:"flow", col:26, no:8, kind:"ok", t:"תוצאה לאבחנה", s:"ואז האבחנה הבאה", v:["A","B","O"]},
+{id:"e_internal", lane:"flow", col:23, no:3, t:"חיתום פנימי", s:"אבחנה אחת בכל פנייה · פר קבוצת סיכון", v:["A","B","O"]},
+{id:"d_resolved", lane:"flow", col:24, no:4, kind:"dia", t:"כל האבחנות הוכרעו?", s:"אחרת · יציאה ל-Swiss Re", v:["A","B","O"]},
+{id:"e_src",      lane:"flow", col:25, no:5, t:"ניתוב מקור חיצוני", s:"פר אבחנה · CMC או Scout", v:["A","B","O"]},
+{id:"e_cmc",      lane:"up",   col:26, no:6, t:"פנייה ל-CMC", s:"נתונים כמותיים · תשובה אחת", v:["A","B","O"]},
+{id:"e_scout",    lane:"flow", col:26, no:6, t:"פנייה ל-Scout", s:"LLM · info ואז rating", v:["A","B","O"]},
+{id:"e_ingest",   lane:"flow", col:27, no:7, t:"קליטה, תרגום ו-Parsing", s:"הסבר מילולי והמלצה מספרית", v:["A","B","O"]},
+{id:"out_diag",   lane:"flow", col:28, no:8, kind:"ok", t:"תוצאה לאבחנה", s:"ואז האבחנה הבאה", v:["A","B","O"]},
 
 /* ---------- אזור 6 · החלטה ---------- */
-{id:"e_agg",   lane:"flow", col:27, no:1, t:"חיבור ברמת כיסוי", s:"סכימת התוספות פר קבוצת סיכון", v:["A","B","O"]},
-{id:"d_stp",   lane:"flow", col:28, no:2, kind:"dia", t:"STP או חתם?", s:"לפי מיני-חוקת STP", v:["A","B","O"]},
-{id:"e_write", lane:"flow", col:29, no:3, t:"כתיבה אוטומטית ל-BPR", s:"החלטה פר כיסוי · בלי מגע חתם", v:["A","B","O"]},
+{id:"e_agg",   lane:"flow", col:29, no:1, t:"חיבור ברמת כיסוי", s:"סכימת התוספות פר קבוצת סיכון", v:["A","B","O"]},
+{id:"d_stp",   lane:"flow", col:30, no:2, kind:"dia", t:"STP או חתם?", s:"לפי מיני-חוקת STP", v:["A","B","O"]},
+{id:"e_write", lane:"flow", col:31, no:3, t:"כתיבה אוטומטית ל-BPR", s:"החלטה פר כיסוי · בלי מגע חתם", v:["A","B","O"]},
 
 /* ---------- אזור 7 · חתם והפקה ---------- */
-{id:"u1", lane:"flow", col:30, no:1, t:"Worklist", s:"מקרי הפקה פתוחים", v:["A","B","O"]},
-{id:"u2", lane:"flow", col:31, no:2, t:"כניסה למקרה", s:"פוליסה ומבוטחים", v:["A","B","O"]},
-{id:"u3", lane:"flow", col:32, no:3, t:"צפייה בפרופיל ובהחלטות", s:"אבחנות · אירועים · מדדים", v:["A","B","O"]},
-{id:"u4", lane:"flow", col:33, no:4, t:"עריכת פרופיל", s:"הוספה · שינוי · מחיקה", v:["A","B","O"]},
-{id:"u5", lane:"flow", col:34, no:5, t:"פנייה ל-Swiss", s:"החתם כותב בעברית", v:["A","B","O"]},
-{id:"u6", lane:"flow", col:35, no:6, t:"החלטה חיתומית", s:"תוספת · החרגה · דחייה", v:["A","B","O"]},
-{id:"u7", lane:"flow", col:36, no:7, t:"פעולות ל-BPR", s:"הפקה · חוסרים · מכתבים", v:["A","B","O"]},
-{id:"out_policy", lane:"flow", col:37, kind:"ok", t:"הפקת פוליסה", s:"מבוצעת ב-BPR", v:["A","B","O"]},
-{id:"out_client", lane:"flow", col:38, kind:"ok", t:"פלט ללקוח", s:"מייל ב-Offline · מסך ב-Online", v:["A","B","O"]},
+{id:"u1", lane:"flow", col:32, no:1, t:"Worklist", s:"מקרי הפקה פתוחים", v:["A","B","O"]},
+{id:"u2", lane:"flow", col:33, no:2, t:"כניסה למקרה", s:"פוליסה ומבוטחים", v:["A","B","O"]},
+{id:"u3", lane:"flow", col:34, no:3, t:"צפייה בפרופיל ובהחלטות", s:"אבחנות · אירועים · מדדים", v:["A","B","O"]},
+{id:"u4", lane:"flow", col:35, no:4, t:"עריכת פרופיל", s:"הוספה · שינוי · מחיקה", v:["A","B","O"]},
+{id:"u5", lane:"flow", col:36, no:5, t:"פנייה ל-Swiss", s:"החתם כותב בעברית", v:["A","B","O"]},
+{id:"u6", lane:"flow", col:37, no:6, t:"החלטה חיתומית", s:"תוספת · החרגה · דחייה", v:["A","B","O"]},
+{id:"u7", lane:"flow", col:38, no:7, t:"פעולות ל-BPR", s:"הפקה · חוסרים · מכתבים", v:["A","B","O"]},
+{id:"out_policy", lane:"flow", col:39, kind:"ok", t:"הפקת פוליסה", s:"מבוצעת ב-BPR", v:["A","B","O"]},
+{id:"out_client", lane:"flow", col:40, kind:"ok", t:"פלט ללקוח", s:"מייל ב-Offline · מסך ב-Online", v:["A","B","O"]},
 
 /* ---------- רצועת המאגרים · שורה 0 ---------- */
 {id:"db_profile", lane:"db", row:0, span:["p3","p_header"], kind:"cy", ic:"ic-db",
@@ -521,6 +530,8 @@ const NODES = [
 
 /* קבוצות · מסגרות מקווקוות סביב צמתים */
 const GROUPS = [
+  {ids:["f_keyer","f_referent"], cls:"a", v:["A","B"],
+   label:"המסלול הידני · היעד לבטל אותו"},
   {ids:["d_uw_bpr"], cls:"a", v:["A"], label:"גרסה A · ההכרעה כולה ב-BPR"},
   {ids:["f_router_anomaly","f_router_docs","d_docs_ok","d_route"], cls:"b", v:["B","O"],
    label:"גרסאות B ו-Online · ראוטר ההשלמות והניתוב"},
@@ -533,22 +544,34 @@ const GROUPS = [
 ];
 
 const EDGES = [
-/* ===== קליטה ופתיחת מקרה ===== */
+/* ===== קליטה, חדר הסריקה, ופתיחת מקרה ===== */
 {f:"ch_mail", t:"f_intake", k:"main", v:["A","B"]},
-{f:"ch_glaxon", t:"f_case", k:"as", l:"שידור · עוקף את חדר הסריקה", v:["A","B"]},
-{f:"f_intake", t:"f_scan", k:"main", v:["A","B"]},
-{f:"f_scan", t:"f_extract_form", k:"main", v:["A","B"]},
-{f:"f_extract_form", t:"f_tofes", k:"main", v:["A","B"]},
-{f:"f_tofes", t:"f_case", k:"main", v:["A","B"]},
+{f:"f_intake", t:"d_scan_support", k:"main", v:["A","B"]},
+
+/* המסלול הנתמך · Docah, תיוק אוטומטי, ואולי שירות טופס */
+{f:"d_scan_support", t:"f_docah_class", k:"main", l:"נתמך", v:["A","B"]},
+{f:"f_docah_class", t:"sys_docah", k:"x", l:"סיווג וחילוץ נתונים", v:["A","B"]},
+{f:"f_docah_class", t:"db_profile", k:"w", l:"תוכן מחולץ", v:["A","B"]},
+{f:"f_docah_class", t:"f_autofile", k:"main", v:["A","B"]},
+{f:"f_autofile", t:"sys_image", k:"x", l:"תיוק ל-Documentum", v:["A","B"]},
+{f:"f_autofile", t:"d_tofes", k:"main", v:["A","B"]},
+{f:"d_tofes", t:"f_tofes", k:"main", l:"כן", v:["A","B"]},
+{f:"f_tofes", t:"sys_glaxon", k:"x", l:"מיפוי שדות ל-XML אחיד", v:["A","B"]},
+{f:"f_tofes", t:"f_case", k:"main", l:"תיק מלא · בלי רפרנט, ממשיך אוטומטית", v:["A","B"]},
+
+/* המסלול הידני · ממפתח ורפרנט */
+{f:"d_scan_support", t:"f_keyer", k:"c", l:"לא נתמך", v:["A","B"]},
+{f:"f_keyer", t:"sys_image", k:"x", l:"תיוק ל-Documentum", v:["A","B"]},
+{f:"f_keyer", t:"sys_bpr", k:"x", l:"התיוק פותח תור עבודה ריק", v:["A","B"]},
+{f:"f_keyer", t:"f_referent", k:"main", via:"dn", l:"תור עבודה ריק", v:["A","B"]},
+{f:"d_tofes", t:"f_referent", k:"c", l:"לא · נפתח תור עבודה ריק", v:["A","B"]},
+{f:"f_referent", t:"f_case", k:"main", l:"אחרי ההזנה הידנית", v:["A","B"]},
+
+/* השידור · פס אחד שפותח תיק מלא ב-BPR, שלושה מפיקים */
+{f:"sys_glaxon", t:"sys_bpr", k:"x", l:"פותח תיק מלא", v:["A","B","O"]},
+{f:"ch_online", t:"sys_glaxon", k:"x", l:"Online פונה לאותו שידור", v:["O"]},
 {f:"ch_online", t:"f_case", k:"main", l:"כל פנייה נפתחת כתיק ב-BPR", v:["O"]},
-{f:"f_case", t:"sys_bpr", k:"x", l:"פתיחת תיק ותור עבודה", v:["O"]},
 {f:"ch_online", t:"d_make_profile", k:"as", l:"מתחיל ברקע בהזנת ת\"ז", v:["O"]},
-{f:"f_case", t:"f_referent", k:"c", l:"תור עבודה ריק", v:["A","B"]},
-{f:"f_referent", t:"f_case", k:"as", via:"dn", l:"אחרי ההזנה", v:["A","B"]},
-{f:"f_scan", t:"sys_image", k:"x", l:"תיוק המסמכים", v:["A","B"]},
-{f:"f_extract_form", t:"sys_docah", k:"x", v:["A","B"]},
-{f:"f_tofes", t:"sys_bpr", k:"x", l:"פתיחת מקרה מלא", v:["A","B"]},
-{f:"f_extract_form", t:"db_profile", k:"w", l:"תוכן מחולץ", v:["A","B"]},
 
 /* ===== אזור 3 · גרסה A · ההכרעה ב-BPR ===== */
 {f:"f_case", t:"d_uw_bpr", k:"main", via:"up", l:"ה-BPR בודק", v:["A"]},
@@ -803,10 +826,14 @@ function chan(key,a,b,pad){
 }
 function blocked(x,rows,m){ m=m==null?22:m;
   return rows.some(L=>(ROWS[L]||[]).some(n=>x>n.x-m&&x<n.x+n.w+m)); }
-function freeX(x,rows){
-  if(!blocked(x,rows)) return x;
-  for(let d=12;d<=PITCH*2.5;d+=6){ if(!blocked(x-d,rows))return x-d; if(!blocked(x+d,rows))return x+d; }
-  return x;
+/* מחזיר x פנוי הקרוב ביותר, אופציונלית בתוך תחום [lo,hi].
+   התחום קריטי כשהיעד הוא צומת רחב: בלעדיו הבחירה נופלת מחוץ לצומת,
+   ואז ה-clamp מחזיר אותה בדיוק אל מה שרצינו לעקוף. */
+function freeX(x,rows,lo,hi){
+  const ok=v=>(lo==null||v>=lo)&&(hi==null||v<=hi)&&!blocked(v,rows);
+  if(ok(x)) return x;
+  for(let d=12;d<=PITCH*3;d+=6){ if(ok(x-d))return x-d; if(ok(x+d))return x+d; }
+  return (lo!=null&&hi!=null)?Math.max(lo,Math.min(hi,x)):x;
 }
 const clampX=(n,x,m)=>{m=m==null?34:m;return Math.max(n.x+m,Math.min(n.x+n.w-m,x));};
 const R=11;
@@ -844,7 +871,7 @@ function sysPath(S,D){
     else pts.push([x,S.y]); }
   else pts.push([x,S.y]);
   let tx=D.span?clampX(D,x):D.cxp;
-  if(D.lane==="spine") tx=clampX(D,freeX(tx,["sys"]));
+  if(D.lane==="spine"){ const m=34; tx=freeX(clampX(D,tx),["sys"],D.x+m,D.x+D.w-m); }
   const y=chan("chSys",x,tx,26); pts.push([x,y],[tx,y],[tx,D.y+D.h]); return pts;
 }
 function sysSysPath(A,B){ const y=chan("chTop",A.cxp,B.cxp,22);
@@ -858,7 +885,7 @@ function dbPath(S,D){
     else pts.push([x,S.y+S.h]); }
   else pts.push([x,S.y+S.h]);
   let tx=D.span?clampX(D,x):D.cxp;
-  if(D.row===1) tx=clampX(D,freeX(tx,["db0"]));
+  if(D.row===1){ const m=34; tx=freeX(clampX(D,tx),["db0"],D.x+m,D.x+D.w-m); }
   const y=chan("chDb",x,tx,26); pts.push([x,y],[tx,y],[tx,D.y]); return pts;
 }
 function midPath(A,B,e){
